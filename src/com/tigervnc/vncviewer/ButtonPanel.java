@@ -187,17 +187,14 @@ class ButtonPanel extends Panel implements ActionListener {
       }
     } else if (evt.getSource() == ctrlAltDelButton) {
       try {
-        final int modifiers = InputEvent.CTRL_MASK | InputEvent.ALT_MASK;
-
-        KeyEvent ctrlAltDelEvent =
-          new KeyEvent(this, KeyEvent.KEY_PRESSED, 0, modifiers, 127);
-
-        viewer.rfb.writeKeyboardEvent(ctrlAltDelEvent);
-
-        ctrlAltDelEvent =
-          new KeyEvent(this, KeyEvent.KEY_RELEASED, 0, modifiers, 127);
-
-        viewer.rfb.writeKeyboardEvent(ctrlAltDelEvent);
+    	  
+        viewer.rfb.writeKeyboardEvent(0, KeyEvent.VK_CONTROL, true);
+        viewer.rfb.writeKeyboardEvent(0, KeyEvent.VK_ALT, true);
+        viewer.rfb.writeKeyboardEvent(0, KeyEvent.VK_DELETE, true);
+        
+        viewer.rfb.writeKeyboardEvent(0, KeyEvent.VK_CONTROL, false);
+        viewer.rfb.writeKeyboardEvent(0, KeyEvent.VK_ALT, false);
+        viewer.rfb.writeKeyboardEvent(KeyEvent.VK_DELETE, KeyEvent.VK_DELETE, false);
 
       } catch (Exception e) {
         e.printStackTrace();

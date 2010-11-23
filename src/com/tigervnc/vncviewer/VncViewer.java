@@ -85,17 +85,17 @@ public class VncViewer extends java.applet.Applet implements
 
 	// Variables read from parameter values.
 	public String socketFactory;
-	String host;
-	int port;
-	String passwordParam;
-	boolean showControls;
-	boolean offerRelogin;
-	boolean showOfflineDesktop;
-	int deferScreenUpdates;
-	int deferCursorUpdates;
-	int deferUpdateRequests;
-	int debugStatsExcludeUpdates;
-	int debugStatsMeasureUpdates;
+	public String host;
+	public int port;
+	public String passwordParam;
+	public boolean showControls;
+	public boolean offerRelogin;
+	public boolean showOfflineDesktop;
+	public int deferScreenUpdates;
+	public int deferCursorUpdates;
+	public int deferUpdateRequests;
+	public int debugStatsExcludeUpdates;
+	public int debugStatsMeasureUpdates;
 
 	// Reference to this applet for inter-applet communication.
 	public static java.applet.Applet refApplet;
@@ -869,7 +869,7 @@ public class VncViewer extends java.applet.Applet implements
 		return null;
 	}
 
-	int readIntParameter(String name, int defaultValue) {
+	public int readIntParameter(String name, int defaultValue) {
 		String str = readParameter(name, false);
 		int result = defaultValue;
 		if (str != null) {
