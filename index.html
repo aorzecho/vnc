@@ -1,3 +1,4 @@
+<!doctype html>
 <!-- 
      index.html - an example HTML page for TigerVNC Java viewer applet, to be
      used with a standalone Web server running on the same machine where the
@@ -16,14 +17,13 @@
        enough space for the button panel).
 -->
 
-<HTML>
-<TITLE>
-TigerVNC desktop
-</TITLE>
-<APPLET CODE="com.tigervnc.vncviewer.VncViewer" ARCHIVE="VncViewer.jar"
-        WIDTH="800" HEIGHT="632">
-<PARAM NAME="PORT" VALUE="5901">
-</APPLET>
-<BR>
-<A href="http://www.tigervnc.org/">TigerVNC site</A>
-</HTML>
+<html>
+<title>TigerVNC desktop</title>
+<applet code="com.tigervnc.vncviewer.VncViewer" archive="vnc.jar"
+        width="800" height="632">
+<param name="host" value="localhost" />
+<param name="port" value="5905" />
+</applet>
+<br>
+<a href="http://www.tigervnc.org/">tigervnc site</a>
+</html>
