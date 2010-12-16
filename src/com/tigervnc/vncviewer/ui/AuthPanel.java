@@ -18,10 +18,12 @@
 //  USA.
 //
 
-package com.tigervnc.vncviewer;
+package com.tigervnc.vncviewer.ui;
 
 import java.awt.*;
 import java.awt.event.*;
+
+import com.tigervnc.vncviewer.VncViewer;
 
 //
 // The panel which implements the user authentication scheme

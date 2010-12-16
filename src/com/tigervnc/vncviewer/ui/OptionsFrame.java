@@ -27,13 +27,14 @@
 // It sets the encodings array and some booleans.
 //
 
-package com.tigervnc.vncviewer;
+package com.tigervnc.vncviewer.ui;
 
 import java.awt.*;
 import java.awt.event.*;
 
 import com.tigervnc.rfb.Encodings;
 import com.tigervnc.rfb.RfbProto;
+import com.tigervnc.vncviewer.VncViewer;
 
 public class OptionsFrame extends Frame
   implements WindowListener, ActionListener, ItemListener {
@@ -68,7 +69,7 @@ public class OptionsFrame extends Frame
     { "Yes", "No" }
   };
 
-  final int
+  public final int
     encodingIndex        = 0,
     compressLevelIndex   = 1,
     jpegQualityIndex     = 2,
@@ -82,23 +83,23 @@ public class OptionsFrame extends Frame
     scaleCursorIndex     = 10,
     shareDesktopIndex    = 11;
 
-  Label[] labels = new Label[names.length];
-  Choice[] choices = new Choice[names.length];
-  Button closeButton;
-  VncViewer viewer;
+  public Label[] labels = new Label[names.length];
+  public Choice[] choices = new Choice[names.length];
+  public Button closeButton;
+  public VncViewer viewer;
 
 
   //
   // The actual data which other classes look at:
   //
 
-  int preferredEncoding;
-  int compressLevel;
-  int jpegQuality;
-  boolean useCopyRect;
-  boolean continuousUpdates;
-  boolean requestCursorUpdates;
-  boolean ignoreCursorUpdates;
+  public int preferredEncoding;
+  public int compressLevel;
+  public int jpegQuality;
+  public boolean useCopyRect;
+  public boolean continuousUpdates;
+  public boolean requestCursorUpdates;
+  public boolean ignoreCursorUpdates;
 
   boolean eightBitColors;
 
@@ -107,7 +108,7 @@ public class OptionsFrame extends Frame
   boolean viewOnly;
   int scaleCursor;
 
-  boolean autoScale;
+  public boolean autoScale;
   int scalingFactor;
 
   //
@@ -115,7 +116,7 @@ public class OptionsFrame extends Frame
   // arrays.
   //
 
-  OptionsFrame(VncViewer v) {
+  public OptionsFrame(VncViewer v) {
     super("TigerVNC Options");
 
     viewer = v;
@@ -269,7 +270,7 @@ public class OptionsFrame extends Frame
   // server.
   //
 
-  void setEncodings() {
+  public void setEncodings() {
     useCopyRect = choices[useCopyRectIndex].getSelectedItem().equals("Yes");
 
     preferredEncoding = Encodings.EncodingRaw;
@@ -345,7 +346,7 @@ public class OptionsFrame extends Frame
   // necessary.
   //
 
-  void setColorFormat() {
+  public void setColorFormat() {
 
     eightBitColors =
       choices[eightBitColorsIndex].getSelectedItem().equals("Yes");

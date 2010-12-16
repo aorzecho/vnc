@@ -22,12 +22,14 @@
 // Clipboard frame.
 //
 
-package com.tigervnc.vncviewer;
+package com.tigervnc.vncviewer.ui;
 
 import java.awt.*;
 import java.awt.event.*;
 
-class ClipboardFrame extends Frame
+import com.tigervnc.vncviewer.VncViewer;
+
+public class ClipboardFrame extends Frame
   implements WindowListener, ActionListener {
 
   TextArea textArea;
@@ -39,7 +41,7 @@ class ClipboardFrame extends Frame
   // Constructor.
   //
 
-  ClipboardFrame(VncViewer v) {
+  public ClipboardFrame(VncViewer v) {
     super("TigerVNC Clipboard");
 
     viewer = v;

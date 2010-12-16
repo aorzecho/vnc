@@ -25,7 +25,7 @@
 // the dialog box has been dismissed.  For a non-modal dialog box, the
 // showDialog() method returns immediately.
 
-package com.tigervnc.vncviewer;
+package com.tigervnc.vncviewer.ui;
 
 import java.awt.*;
 

@@ -36,6 +36,13 @@ import java.util.ArrayList;
 
 import com.tigervnc.rfb.Encodings;
 import com.tigervnc.rfb.RfbProto;
+import com.tigervnc.vncviewer.ui.AuthPanel;
+import com.tigervnc.vncviewer.ui.ButtonPanel;
+import com.tigervnc.vncviewer.ui.ClipboardFrame;
+import com.tigervnc.vncviewer.ui.OptionsFrame;
+import com.tigervnc.vncviewer.ui.RecordingFrame;
+import com.tigervnc.vncviewer.ui.ReloginPanel;
+import com.tigervnc.vncviewer.ui.VncCanvas;
 
 public class VncViewer extends java.applet.Applet implements
 		java.lang.Runnable, WindowListener, ComponentListener {
@@ -63,17 +70,17 @@ public class VncViewer extends java.applet.Applet implements
 	public RfbProto rfb;
 	Thread rfbThread;
 
-	Frame vncFrame;
-	Container vncContainer;
-	ScrollPane desktopScrollPane;
-	GridBagLayout gridbag;
-	ButtonPanel buttonPanel;
-	Label connStatusLabel;
-	VncCanvas vc;
+	public Frame vncFrame;
+	public Container vncContainer;
+	public ScrollPane desktopScrollPane;
+	public GridBagLayout gridbag;
+	public ButtonPanel buttonPanel;
+	public Label connStatusLabel;
+	public VncCanvas vc;
 	public OptionsFrame options;
 
-	ClipboardFrame clipboard;
-	RecordingFrame rec;
+	public ClipboardFrame clipboard;
+	public RecordingFrame rec;
 
 	// Control session recording.
 	Object recordingSync;
@@ -390,6 +397,10 @@ public class VncViewer extends java.applet.Applet implements
 	//
 
 	void showConnectionStatus(String msg) {
+		if(!showControls){
+			return;
+		}
+		
 		if (msg == null) {
 			if (vncContainer.isAncestorOf(connStatusLabel)) {
 				vncContainer.remove(connStatusLabel);
@@ -538,11 +549,11 @@ public class VncViewer extends java.applet.Applet implements
 	List<Integer> encodingsSaved = new ArrayList<Integer>();
 	int nEncodingsSaved;
 
-	void setEncodings() {
+	public void setEncodings() {
 		setEncodings(false);
 	}
 
-	void autoSelectEncodings() {
+	public void autoSelectEncodings() {
 		setEncodings(true);
 	}
 
@@ -657,7 +668,7 @@ public class VncViewer extends java.applet.Applet implements
 	// setCutText() - send the given cut text to the RFB server.
 	//
 
-	void setCutText(String text) {
+	public void setCutText(String text) {
 		try {
 			if (rfb != null && rfb.inNormalProtocol) {
 				rfb.writeClientCutText(text);
@@ -672,7 +683,7 @@ public class VncViewer extends java.applet.Applet implements
 	// null in place of the fname argument.
 	//
 
-	void setRecordingStatus(String fname) {
+	public void setRecordingStatus(String fname) {
 		synchronized (recordingSync) {
 			sessionFileName = fname;
 			recordingStatusChanged = true;
@@ -684,7 +695,7 @@ public class VncViewer extends java.applet.Applet implements
 	// causes recording of a new session.
 	//
 
-	boolean checkRecordingStatus() throws IOException {
+	public boolean checkRecordingStatus() throws IOException {
 		synchronized (recordingSync) {
 			if (recordingStatusChanged) {
 				recordingStatusChanged = false;
@@ -885,7 +896,7 @@ public class VncViewer extends java.applet.Applet implements
 	// moveFocusToDesktop() - move keyboard focus either to VncCanvas.
 	//
 
-	void moveFocusToDesktop() {
+	public void moveFocusToDesktop() {
 		if (vncContainer != null) {
 			if (vc != null && vncContainer.isAncestorOf(vc))
 				vc.requestFocus();

@@ -23,16 +23,17 @@
 // VNCViewer desktop window.
 //
 
-package com.tigervnc.vncviewer;
+package com.tigervnc.vncviewer.ui;
 
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 
 import com.tigervnc.rfb.RfbProto;
+import com.tigervnc.vncviewer.VncViewer;
 
 
-class ButtonPanel extends Panel implements ActionListener {
+public class ButtonPanel extends Panel implements ActionListener {
 
   VncViewer viewer;
   Button disconnectButton;
@@ -49,7 +50,7 @@ class ButtonPanel extends Panel implements ActionListener {
   final String selectEnterLabel = "Select Video Area";
   final String selectLeaveLabel = "Hide Selection";
 
-  ButtonPanel(VncViewer v) {
+  public ButtonPanel(VncViewer v) {
     viewer = v;
 
     setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
