@@ -125,7 +125,7 @@ public class VncViewer extends java.applet.Applet implements
 	public int debugStatsMeasureUpdates;
 
 	// Reference to this applet for inter-applet communication.
-	public static java.applet.Applet refApplet;
+	//public static java.applet.Applet refApplet;
 
 	//
 	// init()
@@ -134,8 +134,6 @@ public class VncViewer extends java.applet.Applet implements
 	public void init() {
 
 		readParameters();
-
-		refApplet = this;
 
 		if (inSeparateFrame) {	
 			vncFrame = new JFrame("TigerVNC");
@@ -163,6 +161,13 @@ public class VncViewer extends java.applet.Applet implements
 		if (inSeparateFrame) {
 			vncFrame.addWindowListener(this);
 			vncFrame.addComponentListener(this);
+		}
+		
+		// hacky way of making it possible to call this applet from another
+		// the only reason to do so is that system exit shuts down 
+		// FF and Safari on the Mac.
+		if(readParameter("applet", false) == "yes"){
+			inAnApplet = true;
 		}
 		
 		rfbThread = new Thread(this);
@@ -791,27 +796,21 @@ public class VncViewer extends java.applet.Applet implements
 	//
 
 	void readParameters() {
-		host = readParameter("HOST", !inAnApplet);
-		if (host == null) {
-			host = getCodeBase().getHost();
-			if (host.equals("")) {
-				fatalError("HOST parameter not specified");
-			}
-		}
-
-		port = readIntParameter("PORT", 5900);
-
+		host = readParameter("host", true);
+		port = readIntParameter("port", 5900);
+		
+		
 		// Read "ENCPASSWORD" or "PASSWORD" parameter if specified.
 		readPasswordParameters();
 
-		windowTitle = readParameter("windowTitle", false);
+		windowTitle = readParameter("window_title", false);
 		if(windowTitle == null){
 			windowTitle = "VncViewer";
 		}
 		
 		String str;
 		if (inAnApplet) {
-			str = readParameter("Open New Window", false);
+			str = readParameter("new_window", false);
 			if (str != null && str.equalsIgnoreCase("Yes"))
 				inSeparateFrame = true;
 		}
@@ -820,7 +819,7 @@ public class VncViewer extends java.applet.Applet implements
 
 		// "Show Controls" set to "No" disables button panel.
 		showControls = true;
-		str = readParameter("Show Controls", false);
+		str = readParameter("show_controls", false);
 		if (str != null && str.equalsIgnoreCase("No"))
 			showControls = false;
 
@@ -880,6 +879,7 @@ public class VncViewer extends java.applet.Applet implements
 	}
 
 	public String readParameter(String name, boolean required) {
+		System.out.println("read parameter " + name);
 		if (inAnApplet) {
 			String s = getParameter(name);
 			if ((s == null) && required) {
