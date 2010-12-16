@@ -27,12 +27,31 @@
 
 package com.tigervnc.vncviewer;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
-import java.net.*;
-import java.util.List;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.Frame;
+import java.awt.Graphics;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Label;
+import java.awt.Panel;
+import java.awt.ScrollPane;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.io.EOFException;
+import java.io.IOException;
+import java.net.ConnectException;
+import java.net.NoRouteToHostException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.JFrame;
 
 import com.tigervnc.rfb.Encodings;
 import com.tigervnc.rfb.RfbProto;
@@ -93,6 +112,7 @@ public class VncViewer extends java.applet.Applet implements
 	// Variables read from parameter values.
 	public String socketFactory;
 	public String host;
+	public String windowTitle;
 	public int port;
 	public String passwordParam;
 	public boolean showControls;
@@ -117,8 +137,8 @@ public class VncViewer extends java.applet.Applet implements
 
 		refApplet = this;
 
-		if (inSeparateFrame) {
-			vncFrame = new Frame("TigerVNC");
+		if (inSeparateFrame) {	
+			vncFrame = new JFrame("TigerVNC");
 			if (!inAnApplet) {
 				vncFrame.add("Center", this);
 			}
@@ -144,7 +164,7 @@ public class VncViewer extends java.applet.Applet implements
 			vncFrame.addWindowListener(this);
 			vncFrame.addComponentListener(this);
 		}
-
+		
 		rfbThread = new Thread(this);
 		rfbThread.start();
 	}
@@ -225,7 +245,7 @@ public class VncViewer extends java.applet.Applet implements
 
 				// Finally, add our ScrollPane to the Frame window.
 				vncFrame.add(desktopScrollPane);
-				vncFrame.setTitle(rfb.desktopName);
+				vncFrame.setTitle(windowTitle);
 				vncFrame.pack();
 				vc.resizeDesktopFrame();
 
@@ -259,7 +279,7 @@ public class VncViewer extends java.applet.Applet implements
 					vc.enableInput(false);
 				}
 				if (inSeparateFrame) {
-					vncFrame.setTitle(rfb.desktopName + " [disconnected]");
+					vncFrame.setTitle(windowTitle + " [disconnected]");
 				}
 				if (rfb != null && !rfb.closed())
 					rfb.close();
@@ -508,7 +528,6 @@ public class VncViewer extends java.applet.Applet implements
 		rfb.writeClientInit();
 		rfb.readServerInit();
 
-		System.out.println("Desktop name is " + rfb.desktopName);
 		System.out.println("Desktop size is " + rfb.server.fb_width + " x "
 				+ rfb.server.fb_height);
     }
@@ -785,12 +804,19 @@ public class VncViewer extends java.applet.Applet implements
 		// Read "ENCPASSWORD" or "PASSWORD" parameter if specified.
 		readPasswordParameters();
 
+		windowTitle = readParameter("windowTitle", false);
+		if(windowTitle == null){
+			windowTitle = "VncViewer";
+		}
+		
 		String str;
 		if (inAnApplet) {
 			str = readParameter("Open New Window", false);
 			if (str != null && str.equalsIgnoreCase("Yes"))
 				inSeparateFrame = true;
 		}
+		
+		
 
 		// "Show Controls" set to "No" disables button panel.
 		showControls = true;

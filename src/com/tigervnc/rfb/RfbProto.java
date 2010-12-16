@@ -546,7 +546,7 @@ public class RfbProto {
 		viewer.options.disableShareDesktop();
 	}
 
-	public String desktopName;
+	private String desktopName = "";
 
 	//
 	// Create session file and write initial protocol messages into it.
