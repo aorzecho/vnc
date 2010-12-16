@@ -1,8 +1,8 @@
 OUTPUT = bin
 SOURCES = $(shell find src -type f -name \*.java)
 FLAGS = -target 1.5 -d $(OUTPUT)
-KEYSTORE_ALIAS = "steam"
-KEYSTORE_PASS = ""
+KEYSTORE_ALIAS = "dev"
+KEYSTORE_PASS = "123456"
 
 all: sign
 
