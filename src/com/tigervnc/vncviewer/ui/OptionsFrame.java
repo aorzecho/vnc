@@ -384,8 +384,8 @@ public class OptionsFrame extends Frame
 
     viewOnly 
       = choices[viewOnlyIndex].getSelectedItem().equals("Yes");
-    if (viewer.vc != null)
-      viewer.vc.enableInput(!viewOnly);
+    if (viewer.vncCanvas != null)
+      viewer.vncCanvas.enableInput(!viewOnly);
 
     shareDesktop
       = choices[shareDesktopIndex].getSelectedItem().equals("Yes");
@@ -409,8 +409,8 @@ public class OptionsFrame extends Frame
       labels[scaleCursorIndex].setEnabled(false);
       choices[scaleCursorIndex].setEnabled(false);
     }
-    if (viewer.vc != null)
-      viewer.vc.createSoftCursor(); // update cursor scaling
+    if (viewer.vncCanvas != null)
+      viewer.vncCanvas.createSoftCursor(); // update cursor scaling
   }
 
 
@@ -451,8 +451,8 @@ public class OptionsFrame extends Frame
     } else if (source == choices[scalingFactorIndex]){
         // Tell VNC canvas that scaling factor has changed
         setScalingFactor(choices[scalingFactorIndex].getSelectedItem());
-        if (viewer.vc != null)
-          viewer.vc.setScalingFactor(scalingFactor);
+        if (viewer.vncCanvas != null)
+          viewer.vncCanvas.setScalingFactor(scalingFactor);
     }
   }
 

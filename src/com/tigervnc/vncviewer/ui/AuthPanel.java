@@ -20,8 +20,20 @@
 
 package com.tigervnc.vncviewer.ui;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Button;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Panel;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
 
 import com.tigervnc.vncviewer.VncViewer;
 
@@ -31,8 +43,8 @@ import com.tigervnc.vncviewer.VncViewer;
 
 public class AuthPanel extends Panel implements ActionListener {
 
-  TextField passwordField;
-  Button okButton;
+  JTextField passwordField;
+  JButton okButton;
   boolean AskPassword;
 
   //
@@ -42,22 +54,26 @@ public class AuthPanel extends Panel implements ActionListener {
   public AuthPanel(VncViewer viewer, boolean askpassword)
   {
     AskPassword = askpassword;
-    Label titleLabel = new Label("VNC Authentication", Label.CENTER);
+    JLabel titleLabel = new JLabel("VNC Authentication", JLabel.CENTER);
     titleLabel.setFont(new Font("Helvetica", Font.BOLD, 18));
 
-    Label promptLabel;
+    JLabel promptLabel;
     if (AskPassword)
-      promptLabel = new Label("Password:", Label.CENTER);
+      promptLabel = new JLabel("Password:", JLabel.CENTER);
     else
-      promptLabel = new Label("User:", Label.CENTER);
+      promptLabel = new JLabel("User:", JLabel.CENTER);
 
-    passwordField = new TextField(10);
+    if(AskPassword){
+    	passwordField = new JPasswordField(10);
+    }
+    else{
+    	passwordField = new JTextField(10);    	
+    }
+    
     passwordField.setForeground(Color.black);
     passwordField.setBackground(Color.white);
-    if (AskPassword)
-      passwordField.setEchoChar('*');
 
-    okButton = new Button("OK");
+    okButton = new JButton("OK");
 
     GridBagLayout gridbag = new GridBagLayout();
     GridBagConstraints gbc = new GridBagConstraints();

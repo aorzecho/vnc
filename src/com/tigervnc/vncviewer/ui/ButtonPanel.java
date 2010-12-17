@@ -25,25 +25,31 @@
 
 package com.tigervnc.vncviewer.ui;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
+import java.awt.Button;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.io.IOException;
+
+import javax.swing.JButton;
+import javax.swing.JPanel;
 
 import com.tigervnc.rfb.RfbProto;
 import com.tigervnc.vncviewer.VncViewer;
 
 
-public class ButtonPanel extends Panel implements ActionListener {
+public class ButtonPanel extends JPanel implements ActionListener {
 
   VncViewer viewer;
-  Button disconnectButton;
-  Button optionsButton;
-  Button recordButton;
-  Button clipboardButton;
-  Button ctrlAltDelButton;
-  Button refreshButton;
-  Button selectButton;
-  Button videoFreezeButton;
+  JButton disconnectButton;
+  JButton optionsButton;
+  JButton recordButton;
+  JButton clipboardButton;
+  JButton ctrlAltDelButton;
+  JButton refreshButton;
+  JButton selectButton;
+  JButton videoFreezeButton;
 
   final String enableVideoFreezeLabel = "Ignore Video";
   final String disableVideoFreezeLabel = "Enable Video";
@@ -54,27 +60,27 @@ public class ButtonPanel extends Panel implements ActionListener {
     viewer = v;
 
     setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
-    disconnectButton = new Button("Disconnect");
+    disconnectButton = new JButton("Disconnect");
     disconnectButton.setEnabled(false);
     add(disconnectButton);
     disconnectButton.addActionListener(this);
-    optionsButton = new Button("Options");
+    optionsButton = new JButton("Options");
     add(optionsButton);
     optionsButton.addActionListener(this);
-    clipboardButton = new Button("Clipboard");
+    clipboardButton = new JButton("Clipboard");
     clipboardButton.setEnabled(false);
     add(clipboardButton);
     clipboardButton.addActionListener(this);
     if (viewer.rec != null) {
-      recordButton = new Button("Record");
+      recordButton = new JButton("Record");
       add(recordButton);
       recordButton.addActionListener(this);
     }
-    ctrlAltDelButton = new Button("Send Ctrl-Alt-Del");
+    ctrlAltDelButton = new JButton("Send Ctrl-Alt-Del");
     ctrlAltDelButton.setEnabled(false);
     add(ctrlAltDelButton);
     ctrlAltDelButton.addActionListener(this);
-    refreshButton = new Button("Refresh");
+    refreshButton = new JButton("Refresh");
     refreshButton.setEnabled(false);
     add(refreshButton);
     refreshButton.addActionListener(this);
@@ -84,7 +90,7 @@ public class ButtonPanel extends Panel implements ActionListener {
    * Add video selection button to the ButtonPanel.
    */
   public void addSelectButton() {
-    selectButton = new Button(selectEnterLabel);
+    selectButton = new JButton(selectEnterLabel);
     selectButton.setEnabled(false);
     add(selectButton);
     selectButton.addActionListener(this);
@@ -94,7 +100,7 @@ public class ButtonPanel extends Panel implements ActionListener {
    * Add video ignore button to the ButtonPanel.
    */
   public void addVideoFreezeButton() {
-    videoFreezeButton = new Button(enableVideoFreezeLabel);
+    videoFreezeButton = new JButton(enableVideoFreezeLabel);
     add(videoFreezeButton);
     videoFreezeButton.addActionListener(this);
   }
@@ -118,7 +124,7 @@ public class ButtonPanel extends Panel implements ActionListener {
 
   public void disableButtonsOnDisconnect() {
     remove(disconnectButton);
-    disconnectButton = new Button("Hide desktop");
+    disconnectButton = new JButton("Hide desktop");
     disconnectButton.setEnabled(true);
     add(disconnectButton, 0);
     disconnectButton.addActionListener(this);
@@ -209,14 +215,14 @@ public class ButtonPanel extends Panel implements ActionListener {
         e.printStackTrace();
       }
     } else if (selectButton != null && evt.getSource() == selectButton) {
-      if (viewer.vc != null) {
-        boolean isSelecting = viewer.vc.isInSelectionMode();
+      if (viewer.vncCanvas != null) {
+        boolean isSelecting = viewer.vncCanvas.isInSelectionMode();
         if (!isSelecting) {
           selectButton.setLabel(selectLeaveLabel);
-          viewer.vc.enableSelection(true);
+          viewer.vncCanvas.enableSelection(true);
         } else {
           selectButton.setLabel(selectEnterLabel);
-          viewer.vc.enableSelection(false);
+          viewer.vncCanvas.enableSelection(false);
         }
       }
     }

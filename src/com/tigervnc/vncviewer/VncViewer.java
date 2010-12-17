@@ -27,14 +27,13 @@
 
 package com.tigervnc.vncviewer;
 
+import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Label;
 import java.awt.Panel;
@@ -51,7 +50,10 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JApplet;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.UIManager;
 
 import com.tigervnc.rfb.Encodings;
 import com.tigervnc.rfb.RfbProto;
@@ -63,8 +65,8 @@ import com.tigervnc.vncviewer.ui.RecordingFrame;
 import com.tigervnc.vncviewer.ui.ReloginPanel;
 import com.tigervnc.vncviewer.ui.VncCanvas;
 
-public class VncViewer extends java.applet.Applet implements
-		java.lang.Runnable, WindowListener, ComponentListener {
+public class VncViewer extends JApplet implements java.lang.Runnable,
+		WindowListener, ComponentListener {
 
 	public boolean inAnApplet = true;
 	public boolean inSeparateFrame = false;
@@ -89,13 +91,12 @@ public class VncViewer extends java.applet.Applet implements
 	public RfbProto rfb;
 	Thread rfbThread;
 
-	public Frame vncFrame;
+	public JFrame vncFrame;
 	public Container vncContainer;
 	public ScrollPane desktopScrollPane;
-	public GridBagLayout gridbag;
 	public ButtonPanel buttonPanel;
-	public Label connStatusLabel;
-	public VncCanvas vc;
+	public JLabel connStatusLabel;
+	public VncCanvas vncCanvas;
 	public OptionsFrame options;
 
 	public ClipboardFrame clipboard;
@@ -125,7 +126,7 @@ public class VncViewer extends java.applet.Applet implements
 	public int debugStatsMeasureUpdates;
 
 	// Reference to this applet for inter-applet communication.
-	//public static java.applet.Applet refApplet;
+	// public static java.applet.Applet refApplet;
 
 	//
 	// init()
@@ -135,8 +136,9 @@ public class VncViewer extends java.applet.Applet implements
 
 		readParameters();
 
-		if (inSeparateFrame) {	
+		if (inSeparateFrame) {
 			vncFrame = new JFrame("TigerVNC");
+			vncFrame.setResizable(false);
 			if (!inAnApplet) {
 				vncFrame.add("Center", this);
 			}
@@ -162,14 +164,14 @@ public class VncViewer extends java.applet.Applet implements
 			vncFrame.addWindowListener(this);
 			vncFrame.addComponentListener(this);
 		}
-		
+
 		// hacky way of making it possible to call this applet from another
-		// the only reason to do so is that system exit shuts down 
+		// the only reason to do so is that system.exit shuts down
 		// FF and Safari on the Mac.
-		if(readParameter("applet", false) == "yes"){
+		if (readParameter("applet", false) == "yes") {
 			inAnApplet = true;
 		}
-		
+
 		rfbThread = new Thread(this);
 		rfbThread.start();
 	}
@@ -183,35 +185,28 @@ public class VncViewer extends java.applet.Applet implements
 
 	public void run() {
 
-		gridbag = new GridBagLayout();
-		vncContainer.setLayout(gridbag);
-
-		GridBagConstraints gbc = new GridBagConstraints();
-		gbc.gridwidth = GridBagConstraints.REMAINDER;
-		gbc.anchor = GridBagConstraints.NORTHWEST;
-
 		if (showControls) {
 			buttonPanel = new ButtonPanel(this);
-			gridbag.setConstraints(buttonPanel, gbc);
-			vncContainer.add(buttonPanel);
+			connStatusLabel = new JLabel("Status: initializing ...");
+			vncContainer.add(buttonPanel, BorderLayout.NORTH);
+			vncContainer.add(connStatusLabel, BorderLayout.SOUTH);
 		}
 
 		try {
 			connectAndAuthenticate();
 			doProtocolInitialisation();
 
-			if (showControls
-					&& rfb.clientMsgCaps
-							.isEnabled(Encodings.VideoRectangleSelection)) {
-				buttonPanel.addSelectButton();
+			if (showControls) {
+				if (rfb.clientMsgCaps
+						.isEnabled(Encodings.VideoRectangleSelection)) {
+					buttonPanel.addSelectButton();
+				}
+				if (rfb.clientMsgCaps.isEnabled(Encodings.VideoFreeze)) {
+					buttonPanel.addVideoFreezeButton();
+				}
 			}
 
-			if (showControls
-					&& rfb.clientMsgCaps.isEnabled(Encodings.VideoFreeze)) {
-				buttonPanel.addVideoFreezeButton();
-			}
-
-			// FIXME: Use auto-scaling not only in a separate frame.
+			// // FIXME: Use auto-scaling not only in a separate frame.
 			if (options.autoScale && inSeparateFrame) {
 				Dimension screenSize;
 				try {
@@ -224,40 +219,34 @@ public class VncViewer extends java.applet.Applet implements
 				createCanvas(0, 0);
 			}
 
-			gbc.weightx = 1.0;
-			gbc.weighty = 1.0;
-
 			if (inSeparateFrame) {
-
 				// Create a panel which itself is resizeable and can hold
 				// non-resizeable VncCanvas component at the top left corner.
 				Panel canvasPanel = new Panel();
 				canvasPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
-				canvasPanel.add(vc);
+				canvasPanel.add(vncCanvas);
 
 				// Create a ScrollPane which will hold a panel with VncCanvas
 				// inside.
 				desktopScrollPane = new ScrollPane(
 						ScrollPane.SCROLLBARS_AS_NEEDED);
-				gbc.fill = GridBagConstraints.BOTH;
-				gridbag.setConstraints(desktopScrollPane, gbc);
+
 				desktopScrollPane.add(canvasPanel);
 				// If auto scale is not enabled we don't need to set first frame
 				// size to fullscreen
 				if (!options.autoScale) {
-					vc.isFirstSizeAutoUpdate = false;
+					vncCanvas.isFirstSizeAutoUpdate = false;
 				}
 
 				// Finally, add our ScrollPane to the Frame window.
-				vncFrame.add(desktopScrollPane);
+				vncFrame.add(desktopScrollPane, BorderLayout.CENTER);
 				vncFrame.setTitle(windowTitle);
 				vncFrame.pack();
-				vc.resizeDesktopFrame();
+				vncCanvas.resizeDesktopFrame();
 
 			} else {
 				// Just add the VncCanvas component to the Applet.
-				gridbag.setConstraints(vc, gbc);
-				add(vc);
+				add(vncCanvas);
 				validate();
 			}
 
@@ -280,8 +269,8 @@ public class VncViewer extends java.applet.Applet implements
 				e.printStackTrace();
 				System.out
 						.println("Network error: remote side closed connection");
-				if (vc != null) {
-					vc.enableInput(false);
+				if (vncCanvas != null) {
+					vncCanvas.enableInput(false);
 				}
 				if (inSeparateFrame) {
 					vncFrame.setTitle(windowTitle + " [disconnected]");
@@ -324,7 +313,7 @@ public class VncViewer extends java.applet.Applet implements
 	void createCanvas(int maxWidth, int maxHeight) throws IOException {
 		// Determine if Java 2D API is available and use a special
 		// version of VncCanvas if it is present.
-		vc = null;
+		vncCanvas = null;
 		try {
 			// This throws ClassNotFoundException if there is no Java 2D API.
 			Class cl = Class.forName("java.awt.Graphics2D");
@@ -334,14 +323,14 @@ public class VncViewer extends java.applet.Applet implements
 			java.lang.reflect.Constructor cstr = cl.getConstructor(argClasses);
 			Object[] argObjects = { this, new Integer(maxWidth),
 					new Integer(maxHeight) };
-			vc = (VncCanvas) cstr.newInstance(argObjects);
+			vncCanvas = (VncCanvas) cstr.newInstance(argObjects);
 		} catch (Exception e) {
 			System.out.println("Warning: Java 2D API is not available");
 		}
 
 		// If we failed to create VncCanvas2D, use old VncCanvas.
-		if (vc == null)
-			vc = new VncCanvas(this, maxWidth, maxHeight);
+		if (vncCanvas == null)
+			vncCanvas = new VncCanvas(this, maxWidth, maxHeight);
 	}
 
 	//
@@ -352,7 +341,7 @@ public class VncViewer extends java.applet.Applet implements
 
 	void processNormalProtocol() throws Exception {
 		try {
-			vc.processNormalProtocol();
+			vncCanvas.processNormalProtocol();
 		} catch (Exception e) {
 			if (rfbThread == null) {
 				System.out.println("Ignoring RFB socket exceptions"
@@ -382,7 +371,8 @@ public class VncViewer extends java.applet.Applet implements
 		showConnectionStatus("Connected to server");
 
 		rfb.readVersionMsg();
-		showConnectionStatus("RFB server supports protocol version " + rfb.serverVersion);
+		showConnectionStatus("RFB server supports protocol version "
+				+ rfb.serverVersion);
 
 		rfb.writeVersionMsg();
 		showConnectionStatus("Using RFB protocol version " + rfb.clientVersion);
@@ -422,80 +412,47 @@ public class VncViewer extends java.applet.Applet implements
 	//
 
 	void showConnectionStatus(String msg) {
-		if(!showControls){
+		if (!showControls || msg == null) {
 			return;
 		}
-		
-		if (msg == null) {
-			if (vncContainer.isAncestorOf(connStatusLabel)) {
-				vncContainer.remove(connStatusLabel);
-			}
-			return;
-		}
-
-		System.out.println(msg);
-
-		if (connStatusLabel == null) {
-			connStatusLabel = new Label("Status: " + msg);
-			connStatusLabel.setFont(new Font("Helvetica", Font.PLAIN, 12));
-		} else {
-			connStatusLabel.setText("Status: " + msg);
-		}
-
-		if (!vncContainer.isAncestorOf(connStatusLabel)) {
-			GridBagConstraints gbc = new GridBagConstraints();
-			gbc.gridwidth = GridBagConstraints.REMAINDER;
-//			gbc.fill = GridBagConstraints.HORIZONTAL;
-			gbc.anchor = GridBagConstraints.NORTHWEST;
-//			gbc.weightx = 1.0;
-//			gbc.weighty = 1.0;
-			//gbc.insets = new Insets(20, 30, 20, 30);
-			gridbag.setConstraints(connStatusLabel, gbc);
-			vncContainer.add(connStatusLabel);
-		}
-
-		if (inSeparateFrame) {
-			vncFrame.pack();
-		} else {
-			validate();
-		}
+		connStatusLabel.setText("Status: " + msg);
 	}
 
 	//
 	// Show an authentication panel.
 	//
-    void doAuthentification(int secType) throws Exception {
-	switch (secType) {
-	case Encodings.SecTypeNone:
-	    showConnectionStatus("No authentication needed");
-	    rfb.authenticateNone();
-	    break;
-	case Encodings.SecTypeVncAuth:
-	    showConnectionStatus("Performing standard VNC authentication");
-	    if (passwordParam != null) {
-		rfb.authenticateVNC(passwordParam);
-	    } else {
-		String pw = askPassword();
-		rfb.authenticateVNC(pw);
-	    }
-	    break;
-	case Encodings.SecTypeVeNCrypt:
-	    showConnectionStatus("VeNCrypt chooser");
-	    secType = rfb.authenticateVeNCrypt();
-	    doAuthentification(secType);
-	    break;
-	case Encodings.SecTypePlain:
-	    showConnectionStatus("Plain authentication");
-	    {
-		String user = askUser();
-		String pw = askPassword();
-		rfb.authenticatePlain(user,pw);
-	    }
-	    break;
-	default:
-	    throw new Exception("Unknown authentication scheme " + secType);
+	void doAuthentification(int secType) throws Exception {
+		switch (secType) {
+		case Encodings.SecTypeNone:
+			showConnectionStatus("No authentication needed");
+			rfb.authenticateNone();
+			break;
+		case Encodings.SecTypeVncAuth:
+			showConnectionStatus("Performing standard VNC authentication");
+			if (passwordParam != null) {
+				rfb.authenticateVNC(passwordParam);
+			} else {
+				String pw = askPassword();
+				rfb.authenticateVNC(pw);
+			}
+			break;
+		case Encodings.SecTypeVeNCrypt:
+			showConnectionStatus("VeNCrypt chooser");
+			secType = rfb.authenticateVeNCrypt();
+			doAuthentification(secType);
+			break;
+		case Encodings.SecTypePlain:
+			showConnectionStatus("Plain authentication");
+			{
+				String user = askUser();
+				String pw = askPassword();
+				rfb.authenticatePlain(user, pw);
+			}
+			break;
+		default:
+			throw new Exception("Unknown authentication scheme " + secType);
+		}
 	}
-    }
 
 	String askPassword() throws Exception {
 		showConnectionStatus(null);
@@ -509,7 +466,7 @@ public class VncViewer extends java.applet.Applet implements
 		gbc.weighty = 1.0;
 		gbc.ipadx = 100;
 		gbc.ipady = 50;
-		gridbag.setConstraints(authPanel, gbc);
+		// gridbag.setConstraints(authPanel, gbc);
 		vncContainer.add(authPanel);
 
 		if (inSeparateFrame) {
@@ -535,36 +492,27 @@ public class VncViewer extends java.applet.Applet implements
 
 		System.out.println("Desktop size is " + rfb.server.fb_width + " x "
 				+ rfb.server.fb_height);
-    }
-                
-  String askUser() throws Exception{
-  
-    showConnectionStatus(null);
+	}
 
-    AuthPanel authPanel = new AuthPanel(this, false);
+	String askUser() throws Exception {
 
-    GridBagConstraints gbc = new GridBagConstraints();
-    gbc.gridwidth = GridBagConstraints.REMAINDER;
-    gbc.anchor = GridBagConstraints.NORTHWEST;
-    gbc.weightx = 1.0;
-    gbc.weighty = 1.0;
-    gbc.ipadx = 100;
-    gbc.ipady = 50;
-    gridbag.setConstraints(authPanel, gbc);
-    vncContainer.add(authPanel);
+		showConnectionStatus(null);
 
-    if (inSeparateFrame) {
-      vncFrame.pack();
-    } else {
-      validate();
-    }
+		AuthPanel authPanel = new AuthPanel(this, false);
+		vncContainer.add(authPanel);
 
-    authPanel.moveFocusToDefaultField();
-    String pw = authPanel.getPassword();
-    vncContainer.remove(authPanel);
+		if (inSeparateFrame) {
+			vncFrame.pack();
+		} else {
+			validate();
+		}
 
-    return pw;
-  }
+		authPanel.moveFocusToDefaultField();
+		String pw = authPanel.getPassword();
+		vncContainer.remove(authPanel);
+
+		return pw;
+	}
 
 	//
 	// Send current encoding list to the RFB server.
@@ -647,8 +595,8 @@ public class VncViewer extends java.applet.Applet implements
 					+ options.compressLevel);
 		}
 		if (options.jpegQuality >= 0 && options.jpegQuality <= 9) {
-			encodings.add(Encodings.EncodingQualityLevel0
-					+ options.jpegQuality);
+			encodings
+					.add(Encodings.EncodingQualityLevel0 + options.jpegQuality);
 		}
 
 		if (options.requestCursorUpdates) {
@@ -677,13 +625,13 @@ public class VncViewer extends java.applet.Applet implements
 		if (encodingsWereChanged) {
 			try {
 				rfb.writeSetEncodings(encodings);
-				if (vc != null) {
-					vc.softCursorFree();
+				if (vncCanvas != null) {
+					vncCanvas.softCursorFree();
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			encodingsSaved = (ArrayList<Integer>)encodings.clone();
+			encodingsSaved = (ArrayList<Integer>) encodings.clone();
 			nEncodingsSaved = encodings.size();
 		}
 	}
@@ -798,24 +746,21 @@ public class VncViewer extends java.applet.Applet implements
 	void readParameters() {
 		host = readParameter("host", true);
 		port = readIntParameter("port", 5900);
-		
-		
+
 		// Read "ENCPASSWORD" or "PASSWORD" parameter if specified.
 		readPasswordParameters();
 
 		windowTitle = readParameter("window_title", false);
-		if(windowTitle == null){
+		if (windowTitle == null) {
 			windowTitle = "VncViewer";
 		}
-		
+
 		String str;
 		if (inAnApplet) {
 			str = readParameter("new_window", false);
 			if (str != null && str.equalsIgnoreCase("Yes"))
 				inSeparateFrame = true;
 		}
-		
-		
 
 		// "Show Controls" set to "No" disables button panel.
 		showControls = true;
@@ -924,8 +869,8 @@ public class VncViewer extends java.applet.Applet implements
 
 	public void moveFocusToDesktop() {
 		if (vncContainer != null) {
-			if (vc != null && vncContainer.isAncestorOf(vc))
-				vc.requestFocus();
+			if (vncCanvas != null && vncContainer.isAncestorOf(vncCanvas))
+				vncCanvas.requestFocus();
 		}
 	}
 
@@ -936,31 +881,35 @@ public class VncViewer extends java.applet.Applet implements
 	synchronized public void disconnect() {
 		System.out.println("Disconnecting");
 
-		if (vc != null) {
-			double sec = (System.currentTimeMillis() - vc.statStartTime) / 1000.0;
-			double rate = Math.round(vc.statNumUpdates / sec * 100) / 100.0;
-			long nRealRects = vc.statNumPixelRects;
-			long nPseudoRects = vc.statNumTotalRects - vc.statNumPixelRects;
-			System.out.println("Updates received: " + vc.statNumUpdates + " ("
-					+ nRealRects + " rectangles + " + nPseudoRects
+		if (vncCanvas != null) {
+			double sec = (System.currentTimeMillis() - vncCanvas.statStartTime) / 1000.0;
+			double rate = Math.round(vncCanvas.statNumUpdates / sec * 100) / 100.0;
+			long nRealRects = vncCanvas.statNumPixelRects;
+			long nPseudoRects = vncCanvas.statNumTotalRects
+					- vncCanvas.statNumPixelRects;
+			System.out.println("Updates received: " + vncCanvas.statNumUpdates
+					+ " (" + nRealRects + " rectangles + " + nPseudoRects
 					+ " pseudo), " + rate + " updates/sec");
-			long numRectsOther = nRealRects - vc.statNumRectsTight
-					- vc.statNumRectsZRLE - vc.statNumRectsHextile
-					- vc.statNumRectsRaw - vc.statNumRectsCopy;
-			System.out.println("Rectangles:" + " Tight=" + vc.statNumRectsTight
-					+ "(JPEG=" + vc.statNumRectsTightJPEG + ") ZRLE="
-					+ vc.statNumRectsZRLE + " Hextile="
-					+ vc.statNumRectsHextile + " Raw=" + vc.statNumRectsRaw
-					+ " CopyRect=" + vc.statNumRectsCopy + " other="
-					+ numRectsOther);
+			long numRectsOther = nRealRects - vncCanvas.statNumRectsTight
+					- vncCanvas.statNumRectsZRLE
+					- vncCanvas.statNumRectsHextile - vncCanvas.statNumRectsRaw
+					- vncCanvas.statNumRectsCopy;
+			System.out.println("Rectangles:" + " Tight="
+					+ vncCanvas.statNumRectsTight + "(JPEG="
+					+ vncCanvas.statNumRectsTightJPEG + ") ZRLE="
+					+ vncCanvas.statNumRectsZRLE + " Hextile="
+					+ vncCanvas.statNumRectsHextile + " Raw="
+					+ vncCanvas.statNumRectsRaw + " CopyRect="
+					+ vncCanvas.statNumRectsCopy + " other=" + numRectsOther);
 
-			long raw = vc.statNumBytesDecoded;
-			long compressed = vc.statNumBytesEncoded;
+			long raw = vncCanvas.statNumBytesDecoded;
+			long compressed = vncCanvas.statNumBytesEncoded;
 			if (compressed > 0) {
 				double ratio = Math.round((double) raw / compressed * 1000) / 1000.0;
-				System.out.println("Pixel data: " + vc.statNumBytesDecoded
-						+ " bytes, " + vc.statNumBytesEncoded
-						+ " compressed, ratio " + ratio);
+				System.out.println("Pixel data: "
+						+ vncCanvas.statNumBytesDecoded + " bytes, "
+						+ vncCanvas.statNumBytesEncoded + " compressed, ratio "
+						+ ratio);
 			}
 		}
 
@@ -1087,7 +1036,7 @@ public class VncViewer extends java.applet.Applet implements
 	//
 
 	public void enableInput(boolean enable) {
-		vc.enableInput(enable);
+		vncCanvas.enableInput(enable);
 	}
 
 	//
@@ -1097,9 +1046,9 @@ public class VncViewer extends java.applet.Applet implements
 	public void componentResized(ComponentEvent e) {
 		if (e.getComponent() == vncFrame) {
 			if (options.autoScale) {
-				if (vc != null) {
-					if (!vc.isFirstSizeAutoUpdate) {
-						vc.updateFramebufferSize();
+				if (vncCanvas != null) {
+					if (!vncCanvas.isFirstSizeAutoUpdate) {
+						vncCanvas.updateFramebufferSize();
 					}
 				}
 			}
