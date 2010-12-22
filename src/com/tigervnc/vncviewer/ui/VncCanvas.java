@@ -197,6 +197,7 @@ public class VncCanvas extends Canvas implements KeyListener, MouseListener,
 			enableInput(true);
 
 		// Enable mouse and keyboard event listeners.
+		setFocusTraversalKeysEnabled(false); // enables tab key events
 		addKeyListener(this);
 		addMouseListener(this);
 		addMouseMotionListener(this);

@@ -15,5 +15,9 @@ var display = {
   '<param name="new_window" value="yes" >',
 '</object>'].join('');
     dojo.place(dojo.string.substitute(t, args), args.appendto);
+  },
+
+  destroy: function(){
+    dojo.destroy('display');
   }
 };
