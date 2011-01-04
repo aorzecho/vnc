@@ -53,6 +53,7 @@ import java.util.List;
 import javax.swing.JApplet;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 import com.tigervnc.rfb.Encodings;
@@ -132,16 +133,13 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	// init()
 	//
 
-	public void init() {
+	public void init() {		
 
 		readParameters();
 
 		if (inSeparateFrame) {
 			vncFrame = new JFrame("TigerVNC");
 			vncFrame.setResizable(false);
-			if (!inAnApplet) {
-				vncFrame.add("Center", this);
-			}
 			vncContainer = vncFrame;
 		} else {
 			vncContainer = this;
@@ -165,9 +163,12 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 			vncFrame.addComponentListener(this);
 		}
 
-		// hacky way of making it possible to call this applet from another
+		// hacky way of making it possible to create this applet from another
 		// the only reason to do so is that system.exit shuts down
 		// FF and Safari on the Mac.
+		// Note: It's essential that this is after getParameters
+		// since that method will try to access applet parameters
+		// if inAnApplet is true - cause exception.
 		if (readParameter("applet", false) == "yes") {
 			inAnApplet = true;
 		}

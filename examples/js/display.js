@@ -7,7 +7,7 @@ var display = {
 '<object type="application/x-java-applet" id="display" width="1" height="1">',
   '<param name="mayscript" value="true">',
   '<param name="archive" value="/applet/vnc.jar?v=' + new Date().getTime() + '">',
-  '<param name="code" value="com.tigervnc.vncviewer.VncViewer" >',
+  '<param name="code" value="com.tigervnc.vncviewer.VncApplet" >',
   '<param name="port" value="${port}" >',
   '<param name="host" value="${host}" >',
   '<param name="window_title" value="VNC Viewer" >',
