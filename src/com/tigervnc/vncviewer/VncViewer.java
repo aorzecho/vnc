@@ -53,6 +53,8 @@ import java.util.List;
 import javax.swing.JApplet;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
 import com.tigervnc.rfb.Encodings;
 import com.tigervnc.rfb.RfbProto;
@@ -67,8 +69,8 @@ import com.tigervnc.vncviewer.ui.VncCanvas;
 public class VncViewer extends JApplet implements java.lang.Runnable,
 		WindowListener, ComponentListener {
 
-	public boolean inAnApplet = true;
-	public boolean inSeparateFrame = false;
+	public static boolean inAnApplet = true;
+	public static boolean inSeparateFrame = false;
 
 	//
 	// main() is called when run as a java program from the command line.
@@ -78,8 +80,8 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	public static void main(String[] argv) {
 		VncViewer v = new VncViewer();
 		v.mainArgs = argv;
-		v.inAnApplet = false;
-		v.inSeparateFrame = true;
+		VncViewer.inAnApplet = false;
+		VncViewer.inSeparateFrame = true;
 
 		v.init();
 		v.start();
@@ -159,16 +161,6 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 		if (inSeparateFrame) {
 			vncFrame.addWindowListener(this);
 			vncFrame.addComponentListener(this);
-		}
-
-		// hacky way of making it possible to create this applet from another
-		// the only reason to do so is that system.exit shuts down
-		// FF and Safari on the Mac.
-		// Note: It's essential that this is after getParameters
-		// since that method will try to access applet parameters
-		// if inAnApplet is true - cause exception.
-		if (readParameter("applet", false) == "yes") {
-			inAnApplet = true;
 		}
 
 		rfbThread = new Thread(this);

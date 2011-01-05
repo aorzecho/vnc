@@ -19,9 +19,17 @@ public class VncApplet extends Applet {
 
 	public void startVNC() {
 		System.out.println("Starting vnc ...");
-		VncViewer.main(new String[] { "host", host, "port", port,
-				"window_title", window_title, "show_controls", "no",
-				"new_window", "yes", "applet", "yes" });
+		VncViewer.main(new String[] { 
+				"host", host, 
+				"port", port,
+				"window_title", window_title, 
+				"show_controls", "no",
+				"new_window", "no"
+		});
+		
+		// the only reason to do so is that system.exit shuts down
+		// FF and Safari on the Mac.
+		VncViewer.inAnApplet = true;
 	}
 
 	private String getRequiredParameter(String name) {

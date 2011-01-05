@@ -23,7 +23,8 @@ public class Version extends ClientMessage {
 		
 		Matcher matcher = version_pattern.matcher(new String(msg));
 		if(!matcher.matches()){
-			System.out.println("didnt match");
+			// FIXME: change to a protocol exception...
+			throw new IOException("version from server: " + msg + " is not valid");
 		}
 		this.major = Integer.parseInt(matcher.group(1).replaceFirst("0*", ""));
 		this.minor = Integer.parseInt(matcher.group(2).replaceFirst("0*", ""));
