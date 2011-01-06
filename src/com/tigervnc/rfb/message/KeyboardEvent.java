@@ -70,6 +70,23 @@ public class KeyboardEvent implements IServerMessage {
 	 * @return whether a shortcut was applied.
 	 */
 	private void handleShortcuts(KeyEvent evt) {		
+		// WTF? no VK alt Gr on Windows, instead Ctrl + Alt
+		// Actually just always do this, so Ctrl + Alt is Alt Gr
+		if (keycode == KeyEvent.VK_ALT) {
+			if (evt.isControlDown()) {
+				// press
+				alt_gr = true;
+				// release the by user pressed control key
+				addExtraEvent(new KeyboardEvent(keysym,
+						KeyEvent.VK_CONTROL, false));
+				keycode = KeyEvent.VK_ALT_GRAPH;
+			} else if (alt_gr) {
+				// release
+				keycode = KeyEvent.VK_ALT_GRAPH;
+				alt_gr = false;
+			}
+		}
+		
 		switch (keycode) {
 		case KeyEvent.VK_BACK_SPACE:
 			if (!(evt.isAltDown() && evt.isControlDown())) {
@@ -219,21 +236,6 @@ public class KeyboardEvent implements IServerMessage {
 		// WTF? When danish layout VK_EQUALS is changed to DEAD_ACUTE
 		if (keycode == KeyEvent.VK_DEAD_ACUTE) {
 			keycode = KeyEvent.VK_EQUALS;
-		}
-		// WTF? no VK alt Gr on Windows, instead Ctrl + Alt
-		else if (keycode == KeyEvent.VK_ALT) {
-			if (evt.isControlDown()) {
-				// press
-				alt_gr = true;
-				// release the by windows pressed control key
-				addExtraEvent(new KeyboardEvent(keysym,
-						KeyEvent.VK_CONTROL, false));
-				keycode = KeyEvent.VK_ALT_GRAPH;
-			} else if (alt_gr) {
-				// release
-				keycode = KeyEvent.VK_ALT_GRAPH;
-				alt_gr = false;
-			}
 		}
 	}
 	
