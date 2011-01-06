@@ -797,39 +797,11 @@ public class VncCanvas extends Canvas implements KeyListener, MouseListener,
 	//
 
 	public void keyPressed(KeyEvent evt) {
-		if(!handleShortcuts(evt)){
-			processLocalKeyEvent(evt);
-		}
+		processLocalKeyEvent(evt);
 	}
 
 	public void keyReleased(KeyEvent evt) {
-		if(!handleShortcuts(evt)){
-			processLocalKeyEvent(evt);			
-		}
-	}
-
-	// Alternative shortcuts
-	// Ctrl-Alt-Delete = Ctrl-Alt-BackSpace
-	private boolean handleShortcuts(KeyEvent evt) {
-		if (!(evt.isAltDown() && evt.isControlDown())) {
-			return false;
-		}
-		boolean isPress = KeyEvent.KEY_PRESSED == evt.getID();
-		try {
-			switch (evt.getKeyCode()) {
-			case KeyEvent.VK_BACK_SPACE:
-				rfb.writeKeyboardEvent(0, KeyEvent.VK_CONTROL, isPress);
-				rfb.writeKeyboardEvent(0, KeyEvent.VK_ALT, isPress);
-				rfb.writeKeyboardEvent(KeyEvent.VK_DELETE, KeyEvent.VK_DELETE,
-						isPress);
-				return true;
-			default:
-				return false;
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return false;
+		processLocalKeyEvent(evt);
 	}
 
 	private static final Map<Character, Integer> char2vk = new HashMap<Character, Integer>();
@@ -840,6 +812,7 @@ public class VncCanvas extends Canvas implements KeyListener, MouseListener,
 	}
 
 	// WTF? Java Windows doesn't get keypress / keyrelease for æøå!?!
+	// we write them here!
 	public void keyTyped(KeyEvent evt) {
 		if (Util.isWin()) {
 			char keychar = evt.getKeyChar();
@@ -855,7 +828,7 @@ public class VncCanvas extends Canvas implements KeyListener, MouseListener,
 		}
 		evt.consume();
 	}
-
+	
 	public void mousePressed(MouseEvent evt) {
 		processLocalMouseEvent(evt, false);
 	}

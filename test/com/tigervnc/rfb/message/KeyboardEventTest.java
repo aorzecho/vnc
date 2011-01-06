@@ -38,4 +38,6 @@ public class KeyboardEventTest {
 		// keycode
 		Assert.assertEquals(KeyMap.java2rfb[KeyEvent.VK_1], ByteBuffer.wrap(new byte[]{key_ev[8], key_ev[9], key_ev[10], key_ev[11]}).asIntBuffer().get());
 	}
+	
+	
 }
