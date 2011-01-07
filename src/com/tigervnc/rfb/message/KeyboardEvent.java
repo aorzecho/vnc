@@ -272,10 +272,12 @@ public class KeyboardEvent implements IServerMessage {
 			// WTF? When danish layout VK_EQUALS is changed to DEAD_ACUTE
 			_keycode = KeyEvent.VK_EQUALS;
 		}
-		else if(_keycode == KeyEvent.VK_QUOTE && _keysym == '\''){
+		else if(_keycode == KeyEvent.VK_QUOTE){
+			if(_keysym == '\'' || _keysym == '*'){
 			// on danish layouts pressing backslash button
 			// wrongly produces 222 (VK_QUOTE) which is the keycode for ø!
 			_keycode = KeyEvent.VK_BACK_SLASH;
+			}
 		}
 	}
 	
