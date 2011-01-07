@@ -11,7 +11,6 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import com.tigervnc.rfb.Encodings;
-import com.tigervnc.rfb.KeyMap;
 import com.tigervnc.rfb.message.KeyboardEvent.KeyUndefinedException;
 
 
@@ -42,7 +41,7 @@ public class KeyboardEventTest {
 		// keysym
 		Assert.assertEquals(1, ByteBuffer.wrap(new byte[]{key_ev[4], key_ev[5], key_ev[6], key_ev[7]}).asIntBuffer().get());
 		// keycode
-		Assert.assertEquals(KeyMap.java2rfb[KeyEvent.VK_1], ByteBuffer.wrap(new byte[]{key_ev[8], key_ev[9], key_ev[10], key_ev[11]}).asIntBuffer().get());
+		Assert.assertEquals(KeyboardEventMap.java2rfb[KeyEvent.VK_1], ByteBuffer.wrap(new byte[]{key_ev[8], key_ev[9], key_ev[10], key_ev[11]}).asIntBuffer().get());
 	}
 	
 	@Test
@@ -52,10 +51,12 @@ public class KeyboardEventTest {
 		KeyboardEvent rfb_ke = new KeyboardEvent(new KeyEvent(dummy, KeyEvent.KEY_PRESSED, 0, modifiers, KeyEvent.VK_ALT));
 		
 		// ctrl + alt
+		Assert.assertEquals(rfb_ke._extra_preceding_events.size(), 2);
 		KeyboardEvent control_release_event = rfb_ke._extra_preceding_events.get(0);
 		KeyboardEvent alt_gr_press_event = rfb_ke._extra_preceding_events.get(1);
 		
 		// should release control
+		
 		Assert.assertEquals(KeyEvent.VK_CONTROL, control_release_event._keycode);
 		Assert.assertEquals(false, control_release_event._press);
 		
@@ -69,6 +70,7 @@ public class KeyboardEventTest {
 		modifiers = KeyEvent.ALT_DOWN_MASK;
 		rfb_ke = new KeyboardEvent(new KeyEvent(dummy, KeyEvent.KEY_PRESSED, 0, modifiers, KeyEvent.VK_CONTROL));
 		
+		Assert.assertEquals(rfb_ke._extra_preceding_events.size(), 2);
 		KeyboardEvent alt_release_event = rfb_ke._extra_preceding_events.get(0);
 		alt_gr_press_event = rfb_ke._extra_preceding_events.get(1);
 		

@@ -809,9 +809,14 @@ public class VncCanvas extends Canvas implements KeyListener, MouseListener,
 		char2vk.put('æ', KeyEvent.VK_SEMICOLON);
 		char2vk.put('ø', KeyEvent.VK_QUOTE);
 		char2vk.put('å', KeyEvent.VK_OPEN_BRACKET);
+		char2vk.put('Æ', KeyEvent.VK_SEMICOLON);
+		char2vk.put('Ø', KeyEvent.VK_QUOTE);
+		char2vk.put('Å', KeyEvent.VK_OPEN_BRACKET);
 	}
 
 	// WTF? Java Windows doesn't get keypress / keyrelease for æøå!?!
+	// the keycode is 0 (unknown!)
+	// but on only keyTyped events.
 	// we write them here!
 	public void keyTyped(KeyEvent evt) {
 		if (Util.isWin()) {

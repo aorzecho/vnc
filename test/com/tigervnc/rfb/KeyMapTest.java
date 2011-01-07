@@ -6,13 +6,15 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
+import com.tigervnc.rfb.message.KeyboardEventMap;
+
 
 
 public class KeyMapTest {
 
 	@Test
 	public void test_java2rfb(){
-		Assert.assertEquals(0x1e, KeyMap.java2rfb[KeyEvent.VK_A]);
-		Assert.assertEquals(0xcd, KeyMap.java2rfb[KeyEvent.VK_RIGHT]);
+		Assert.assertEquals(0x1e, KeyboardEventMap.java2rfb[KeyEvent.VK_A]);
+		Assert.assertEquals(0xcd, KeyboardEventMap.java2rfb[KeyEvent.VK_RIGHT]);
 	}
 }

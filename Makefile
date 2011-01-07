@@ -6,7 +6,10 @@ KEYSTORE_PASS = "123456"
 
 all: sign
 
-build:
+keymap:
+	@(cd src/com/tigervnc/vncviewer;./keymap-gen.py)
+
+build: keymap
 	@(javac $(FLAGS) $(SOURCES))
 
 jar: build

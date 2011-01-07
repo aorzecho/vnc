@@ -8,14 +8,12 @@ import java.util.List;
 import java.util.Map;
 
 import com.tigervnc.rfb.Encodings;
-import com.tigervnc.rfb.KeyMap;
 import com.tigervnc.rfb.RfbUtil;
 import com.tigervnc.vncviewer.Util;
 
 public class KeyboardEvent implements IServerMessage {
 
-	public class KeyUndefinedException extends Exception {
-	}
+	public class KeyUndefinedException extends Exception {}
 
 	// Set from the main vnc response loop VncViewer, refactor that...
 	public static boolean extended_key_event = false;
@@ -216,7 +214,7 @@ public class KeyboardEvent implements IServerMessage {
 	}
 
 	protected byte[] getExtendedKeyEvent() {
-		int rfbcode = KeyMap.java2rfb[_keycode];
+		int rfbcode = KeyboardEventMap.java2rfb[_keycode];
 		byte[] buf = new byte[12];
 		buf[0] = (byte) Encodings.QEMU;
 		buf[1] = (byte) 0; // *submessage-type*
@@ -270,9 +268,14 @@ public class KeyboardEvent implements IServerMessage {
 	}
 	
 	private void handleWinPecularities(KeyEvent evt){
-		// WTF? When danish layout VK_EQUALS is changed to DEAD_ACUTE
 		if (_keycode == KeyEvent.VK_DEAD_ACUTE) {
+			// WTF? When danish layout VK_EQUALS is changed to DEAD_ACUTE
 			_keycode = KeyEvent.VK_EQUALS;
+		}
+		else if(_keycode == KeyEvent.VK_QUOTE && _keysym == '\''){
+			// on danish layouts pressing backslash button
+			// wrongly produces 222 (VK_QUOTE) which is the keycode for ø!
+			_keycode = KeyEvent.VK_BACK_SLASH;
 		}
 	}
 	
