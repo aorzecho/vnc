@@ -42,6 +42,7 @@ import java.awt.event.MouseMotionListener;
 import java.awt.image.ColorModel;
 import java.awt.image.DirectColorModel;
 import java.awt.image.MemoryImageSource;
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -460,236 +461,243 @@ public class VncCanvas extends Canvas implements KeyListener, MouseListener,
 
 	public void processNormalProtocol() throws Exception {
 
-		// Start/stop session recording if necessary.
-		viewer.checkRecordingStatus();
+	
+		try {
+			// Start/stop session recording if necessary.
+			viewer.checkRecordingStatus();
 
-		rfb.writeFramebufferUpdateRequest(0, 0, rfb.server.fb_width,
-				rfb.server.fb_height, false);
+			
+			rfb.writeFramebufferUpdateRequest(0, 0, rfb.server.fb_width,
+					rfb.server.fb_height, false);
 
-		if (viewer.options.continuousUpdates) {
-			rfb.tryEnableContinuousUpdates(0, 0, rfb.server.fb_width,
-					rfb.server.fb_height);
-		}
-
-		resetStats();
-		boolean statsRestarted = false;
-
-		//
-		// main dispatch loop
-		//
-
-		while (true) {
-
-			// Read message type from the server.
-			int msgType = rfb.readServerMessageType();
-
-			// Process the message depending on its type.
-			switch (msgType) {
-			case Encodings.FramebufferUpdate:
-
-				if (statNumUpdates == viewer.debugStatsExcludeUpdates
-						&& !statsRestarted) {
-					resetStats();
-					statsRestarted = true;
-				} else if (statNumUpdates == viewer.debugStatsMeasureUpdates
-						&& statsRestarted) {
-					viewer.disconnect();
-				}
-
-				rfb.readFramebufferUpdate();
-				statNumUpdates++;
-
-				boolean cursorPosReceived = false;
-
-				for (int i = 0; i < rfb.updateNRects; i++) {
-
-					rfb.readFramebufferUpdateRectHdr();
-					statNumTotalRects++;
-					int rx = rfb.updateRectX, ry = rfb.updateRectY;
-					int rw = rfb.updateRectW, rh = rfb.updateRectH;
-					int e_type = rfb.updateRectEncoding;
-
-					// System.out.println("FramebufferUpdate type=" + e_type +
-					// " area (" + rw + "," + rh + ") at location " + rx + "," +
-					// ry);
-
-					if (e_type == Encodings.EncodingLastRect)
-						break;
-
-					if (e_type == Encodings.EncodingNewFBSize) {
-						rfb.setFramebufferSize(rw, rh);
-						updateFramebufferSize();
-						break;
-					}
-
-					if (e_type == Encodings.EncodingXCursor
-							|| e_type == Encodings.EncodingRichCursor) {
-						handleCursorShapeUpdate(e_type, rx, ry, rw, rh);
-						continue;
-					}
-
-					if (e_type == Encodings.EncodingPointerPos) {
-						softCursorMove(rx, ry);
-						cursorPosReceived = true;
-						continue;
-					}
-
-					long numBytesReadBefore = rfb.getNumBytesRead();
-
-					rfb.startTiming();
-
-					switch (e_type) {
-					case Encodings.EncodingRaw:
-						statNumRectsRaw++;
-						handleRawRect(rx, ry, rw, rh);
-						break;
-					case Encodings.EncodingCopyRect:
-						statNumRectsCopy++;
-						handleCopyRect(rx, ry, rw, rh);
-						break;
-					case Encodings.EncodingRRE:
-						handleRRERect(rx, ry, rw, rh);
-						break;
-					case Encodings.EncodingCoRRE:
-						handleCoRRERect(rx, ry, rw, rh);
-						break;
-					case Encodings.EncodingHextile:
-						statNumRectsHextile++;
-						handleHextileRect(rx, ry, rw, rh);
-						break;
-					case Encodings.EncodingZRLE:
-						statNumRectsZRLE++;
-						handleZRLERect(rx, ry, rw, rh);
-						break;
-					case Encodings.EncodingZlib:
-						handleZlibRect(rx, ry, rw, rh);
-						break;
-					case Encodings.EncodingTight:
-						if (tightDecoder != null) {
-							statNumRectsTightJPEG = tightDecoder
-									.getNumJPEGRects();
-							// statNumRectsTight =
-							// tightDecoder.getNumTightRects();
-						}
-						statNumRectsTight++;
-						handleTightRect(rx, ry, rw, rh);
-						break;
-					case Encodings.ENCODING_EXTENDED_KEY_EVENT:
-						KeyboardEvent.extended_key_event = true;
-						rfb.resendFramebufferUpdateRequest();
-						break;
-					default:
-						throw new Exception("Unknown RFB rectangle encoding "
-								+ e_type);
-					}
-
-					rfb.stopTiming();
-
-					statNumPixelRects++;
-					statNumBytesDecoded += rw * rh * bytesPixel;
-					statNumBytesEncoded += (int) (rfb.getNumBytesRead() - numBytesReadBefore);
-				}
-
-				boolean fullUpdateNeeded = false;
-
-				// Start/stop session recording if necessary. Request full
-				// update if a new session file was opened.
-				if (viewer.checkRecordingStatus())
-					fullUpdateNeeded = true;
-
-				// Defer framebuffer update request if necessary. But wake up
-				// immediately on keyboard or mouse event. Also, don't sleep
-				// if there is some data to receive, or if the last update
-				// included a PointerPos message.
-				if (viewer.deferUpdateRequests > 0 && rfb.available() == 0
-						&& !cursorPosReceived) {
-					synchronized (rfb) {
-						try {
-							rfb.wait(viewer.deferUpdateRequests);
-						} catch (InterruptedException e) {
-						}
-					}
-				}
-
-				viewer.autoSelectEncodings();
-
-				// Before requesting framebuffer update, check if the pixel
-				// format should be changed.
-				if (viewer.options.eightBitColors != (bytesPixel == 1)) {
-					// Pixel format should be changed.
-					if (!rfb.continuousUpdatesAreActive()) {
-						// Continuous updates are not used. In this case, we
-						// just
-						// set new pixel format and request full update.
-						setPixelFormat();
-						fullUpdateNeeded = true;
-					} else {
-						// Otherwise, disable continuous updates first. Pixel
-						// format will be set later when we are sure that there
-						// will be no unsolicited framebuffer updates.
-						rfb.tryDisableContinuousUpdates();
-						break; // skip the code below
-					}
-				}
-
-				// Enable/disable continuous updates to reflect the GUI setting.
-				boolean enable = viewer.options.continuousUpdates;
-				if (enable != rfb.continuousUpdatesAreActive()) {
-					if (enable) {
-						rfb.tryEnableContinuousUpdates(0, 0,
-								rfb.server.fb_width, rfb.server.fb_height);
-					} else {
-						rfb.tryDisableContinuousUpdates();
-					}
-				}
-
-				// Finally, request framebuffer update if needed.
-				if (fullUpdateNeeded) {
-					rfb.writeFramebufferUpdateRequest(0, 0,
-							rfb.server.fb_width, rfb.server.fb_height, false);
-				} else if (!rfb.continuousUpdatesAreActive()) {
-					rfb.writeFramebufferUpdateRequest(0, 0,
-							rfb.server.fb_width, rfb.server.fb_height, true);
-				}
-
-				break;
-
-			case Encodings.SetColourMapEntries:
-				throw new Exception("Can't handle SetColourMapEntries message");
-
-			case Encodings.Bell:
-				Toolkit.getDefaultToolkit().beep();
-				break;
-
-			case Encodings.ServerCutText:
-				String s = rfb.readServerCutText();
-				viewer.clipboard.setCutText(s);
-				break;
-
-			case Encodings.EndOfContinuousUpdates:
-				if (rfb.continuousUpdatesAreActive()) {
-					rfb.endOfContinuousUpdates();
-
-					// Change pixel format if such change was pending. Note that
-					// we
-					// could not change pixel format while continuous updates
-					// were
-					// in effect.
-					boolean incremental = true;
-					if (viewer.options.eightBitColors != (bytesPixel == 1)) {
-						setPixelFormat();
-						incremental = false;
-					}
-					// From this point, we ask for updates explicitly.
-					rfb.writeFramebufferUpdateRequest(0, 0,
-							rfb.server.fb_width, rfb.server.fb_height,
-							incremental);
-				}
-				break;
-
-			default:
-				throw new Exception("Unknown RFB message type " + msgType);
+			if (viewer.options.continuousUpdates) {
+				rfb.tryEnableContinuousUpdates(0, 0, rfb.server.fb_width,
+						rfb.server.fb_height);
 			}
+
+			resetStats();
+			boolean statsRestarted = false;
+
+			//
+			// main dispatch loop
+			//
+
+			while (true) {
+
+				// Read message type from the server.
+				int msgType = rfb.readServerMessageType();
+
+				// Process the message depending on its type.
+				switch (msgType) {
+				case Encodings.FramebufferUpdate:
+
+					if (statNumUpdates == viewer.debugStatsExcludeUpdates
+							&& !statsRestarted) {
+						resetStats();
+						statsRestarted = true;
+					} else if (statNumUpdates == viewer.debugStatsMeasureUpdates
+							&& statsRestarted) {
+						viewer.disconnect();
+					}
+
+					rfb.readFramebufferUpdate();
+					statNumUpdates++;
+
+					boolean cursorPosReceived = false;
+
+					for (int i = 0; i < rfb.updateNRects; i++) {
+
+						rfb.readFramebufferUpdateRectHdr();
+						statNumTotalRects++;
+						int rx = rfb.updateRectX, ry = rfb.updateRectY;
+						int rw = rfb.updateRectW, rh = rfb.updateRectH;
+						int e_type = rfb.updateRectEncoding;
+
+						// System.out.println("FramebufferUpdate type=" + e_type +
+						// " area (" + rw + "," + rh + ") at location " + rx + "," +
+						// ry);
+
+						if (e_type == Encodings.EncodingLastRect)
+							break;
+
+						if (e_type == Encodings.EncodingNewFBSize) {
+							rfb.setFramebufferSize(rw, rh);
+							updateFramebufferSize();
+							break;
+						}
+
+						if (e_type == Encodings.EncodingXCursor
+								|| e_type == Encodings.EncodingRichCursor) {
+							handleCursorShapeUpdate(e_type, rx, ry, rw, rh);
+							continue;
+						}
+
+						if (e_type == Encodings.EncodingPointerPos) {
+							softCursorMove(rx, ry);
+							cursorPosReceived = true;
+							continue;
+						}
+
+						long numBytesReadBefore = rfb.getNumBytesRead();
+
+						rfb.startTiming();
+
+						switch (e_type) {
+						case Encodings.EncodingRaw:
+							statNumRectsRaw++;
+							handleRawRect(rx, ry, rw, rh);
+							break;
+						case Encodings.EncodingCopyRect:
+							statNumRectsCopy++;
+							handleCopyRect(rx, ry, rw, rh);
+							break;
+						case Encodings.EncodingRRE:
+							handleRRERect(rx, ry, rw, rh);
+							break;
+						case Encodings.EncodingCoRRE:
+							handleCoRRERect(rx, ry, rw, rh);
+							break;
+						case Encodings.EncodingHextile:
+							statNumRectsHextile++;
+							handleHextileRect(rx, ry, rw, rh);
+							break;
+						case Encodings.EncodingZRLE:
+							statNumRectsZRLE++;
+							handleZRLERect(rx, ry, rw, rh);
+							break;
+						case Encodings.EncodingZlib:
+							handleZlibRect(rx, ry, rw, rh);
+							break;
+						case Encodings.EncodingTight:
+							if (tightDecoder != null) {
+								statNumRectsTightJPEG = tightDecoder
+										.getNumJPEGRects();
+								// statNumRectsTight =
+								// tightDecoder.getNumTightRects();
+							}
+							statNumRectsTight++;
+							handleTightRect(rx, ry, rw, rh);
+							break;
+						case Encodings.ENCODING_EXTENDED_KEY_EVENT:
+							KeyboardEvent.extended_key_event = true;
+							rfb.resendFramebufferUpdateRequest();
+							break;
+						default:
+							throw new Exception("Unknown RFB rectangle encoding "
+									+ e_type);
+						}
+
+						rfb.stopTiming();
+
+						statNumPixelRects++;
+						statNumBytesDecoded += rw * rh * bytesPixel;
+						statNumBytesEncoded += (int) (rfb.getNumBytesRead() - numBytesReadBefore);
+					}
+
+					boolean fullUpdateNeeded = false;
+
+					// Start/stop session recording if necessary. Request full
+					// update if a new session file was opened.
+					if (viewer.checkRecordingStatus())
+						fullUpdateNeeded = true;
+
+					// Defer framebuffer update request if necessary. But wake up
+					// immediately on keyboard or mouse event. Also, don't sleep
+					// if there is some data to receive, or if the last update
+					// included a PointerPos message.
+					if (viewer.deferUpdateRequests > 0 && rfb.available() == 0
+							&& !cursorPosReceived) {
+						synchronized (rfb) {
+							try {
+								rfb.wait(viewer.deferUpdateRequests);
+							} catch (InterruptedException e) {
+							}
+						}
+					}
+
+					viewer.autoSelectEncodings();
+
+					// Before requesting framebuffer update, check if the pixel
+					// format should be changed.
+					if (viewer.options.eightBitColors != (bytesPixel == 1)) {
+						// Pixel format should be changed.
+						if (!rfb.continuousUpdatesAreActive()) {
+							// Continuous updates are not used. In this case, we
+							// just
+							// set new pixel format and request full update.
+							setPixelFormat();
+							fullUpdateNeeded = true;
+						} else {
+							// Otherwise, disable continuous updates first. Pixel
+							// format will be set later when we are sure that there
+							// will be no unsolicited framebuffer updates.
+							rfb.tryDisableContinuousUpdates();
+							break; // skip the code below
+						}
+					}
+
+					// Enable/disable continuous updates to reflect the GUI setting.
+					boolean enable = viewer.options.continuousUpdates;
+					if (enable != rfb.continuousUpdatesAreActive()) {
+						if (enable) {
+							rfb.tryEnableContinuousUpdates(0, 0,
+									rfb.server.fb_width, rfb.server.fb_height);
+						} else {
+							rfb.tryDisableContinuousUpdates();
+						}
+					}
+
+					// Finally, request framebuffer update if needed.
+					if (fullUpdateNeeded) {
+						rfb.writeFramebufferUpdateRequest(0, 0,
+								rfb.server.fb_width, rfb.server.fb_height, false);
+					} else if (!rfb.continuousUpdatesAreActive()) {
+						rfb.writeFramebufferUpdateRequest(0, 0,
+								rfb.server.fb_width, rfb.server.fb_height, true);
+					}
+
+					break;
+
+				case Encodings.SetColourMapEntries:
+					throw new Exception("Can't handle SetColourMapEntries message");
+
+				case Encodings.Bell:
+					Toolkit.getDefaultToolkit().beep();
+					break;
+
+				case Encodings.ServerCutText:
+					String s = rfb.readServerCutText();
+					viewer.clipboard.setCutText(s);
+					break;
+
+				case Encodings.EndOfContinuousUpdates:
+					if (rfb.continuousUpdatesAreActive()) {
+						rfb.endOfContinuousUpdates();
+
+						// Change pixel format if such change was pending. Note that
+						// we
+						// could not change pixel format while continuous updates
+						// were
+						// in effect.
+						boolean incremental = true;
+						if (viewer.options.eightBitColors != (bytesPixel == 1)) {
+							setPixelFormat();
+							incremental = false;
+						}
+						// From this point, we ask for updates explicitly.
+						rfb.writeFramebufferUpdateRequest(0, 0,
+								rfb.server.fb_width, rfb.server.fb_height,
+								incremental);
+					}
+					break;
+
+				default:
+					throw new Exception("Unknown RFB message type " + msgType);
+				}
+			}
+		} catch (EOFException e) {
+			System.err.println("Server closed stream, closing ...");
+			viewer.disconnect();
 		}
 	}
 
