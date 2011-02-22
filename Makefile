@@ -1,6 +1,7 @@
 OUTPUT = bin
 SOURCES = $(shell find src -type f -name \*.java)
-FLAGS = -target 1.5 -d $(OUTPUT)
+LIBS = libs/log4j-java1.1.jar
+FLAGS = -target 1.5 -classpath $(LIBS) -d $(OUTPUT)
 KEYSTORE_ALIAS = "dev"
 KEYSTORE_PASS = "123456"
 

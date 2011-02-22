@@ -7,12 +7,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
 import com.tigervnc.rfb.Encodings;
 import com.tigervnc.rfb.RfbUtil;
 import com.tigervnc.vncviewer.Util;
 
 public class KeyboardEvent implements IServerMessage {
 
+	private static Logger logger = Logger.getLogger(KeyboardEvent.class);
+	
 	public class KeyUndefinedException extends Exception {}
 
 	// Set from the main vnc response loop VncViewer, refactor that...
@@ -138,6 +142,15 @@ public class KeyboardEvent implements IServerMessage {
 			// No Win key on Mac use META (cmd)
 			_keycode = KeyEvent.VK_WINDOWS;
 			break;
+		case KeyEvent.VK_DELETE:
+			// re-enable ctrl-alt-delete
+			if (!(evt.isAltDown() && evt.isControlDown())) {
+				return;
+			}
+			addExtraEvent(new KeyboardEvent(0xffe3, KeyEvent.VK_CONTROL, _press));
+			addExtraEvent(new KeyboardEvent(0xffe9, KeyEvent.VK_ALT, _press));
+			addExtraEvent(new KeyboardEvent(0xffff, KeyEvent.VK_DELETE, _press));
+			break;
 		}
 	}
 
@@ -193,7 +206,7 @@ public class KeyboardEvent implements IServerMessage {
 		byte[] events = new byte[0];
 		if (_extra_preceding_events != null) {
 			for (KeyboardEvent e : _extra_preceding_events) {
-				System.out.println("extra " + e);
+				logger.info("extra " + e);
 				events = concat(events, e.getBytes());
 			}
 		}
@@ -202,7 +215,7 @@ public class KeyboardEvent implements IServerMessage {
 			return events;
 		}
 
-		System.out.println(this);
+		logger.info(this);
 		byte[] ev;
 		if (extended_key_event) {
 			ev = getExtendedKeyEvent();
@@ -290,7 +303,7 @@ public class KeyboardEvent implements IServerMessage {
 		} else {
 			if (!keys_pressed.containsKey(_keycode)) {
 				// Do press ourself.
-				System.out.println("Writing key pressed event for " + _keysym
+				logger.info("Writing key pressed event for " + _keysym
 						+ " keycode: " + _keycode);
 				addExtraEvent(new KeyboardEvent(_keysym, _keycode, true));
 			} else {

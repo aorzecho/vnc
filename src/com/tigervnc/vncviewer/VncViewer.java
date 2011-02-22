@@ -53,8 +53,10 @@ import java.util.List;
 import javax.swing.JApplet;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
+
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 import com.tigervnc.rfb.Encodings;
 import com.tigervnc.rfb.RfbProto;
@@ -69,6 +71,11 @@ import com.tigervnc.vncviewer.ui.VncCanvas;
 public class VncViewer extends JApplet implements java.lang.Runnable,
 		WindowListener, ComponentListener {
 
+	public static Logger logger = Logger.getLogger(VncViewer.class);
+	static{
+		logger.setLevel(Level.ERROR);
+	}
+	
 	public static boolean inAnApplet = true;
 	public static boolean inSeparateFrame = false;
 
@@ -78,6 +85,7 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	//
 
 	public static void main(String[] argv) {
+		System.out.println("foo");
 		VncViewer v = new VncViewer();
 		v.mainArgs = argv;
 		VncViewer.inAnApplet = false;
@@ -116,6 +124,7 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	public String host;
 	public String windowTitle;
 	public int port;
+	public String log_level;
 	public String passwordParam;
 	public boolean showControls;
 	public boolean offerRelogin;
@@ -133,9 +142,11 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	// init()
 	//
 
-	public void init() {		
-
+	public void init() {	
+		BasicConfigurator.configure();
+		
 		readParameters();
+		setLogLevel(log_level);
 
 		if (inSeparateFrame) {
 			vncFrame = new JFrame("TigerVNC");
@@ -144,7 +155,8 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 		} else {
 			vncContainer = this;
 		}
-
+		
+		System.out.println("here");
 		recordingSync = new Object();
 
 		options = new OptionsFrame(this);
@@ -163,6 +175,7 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 			vncFrame.addComponentListener(this);
 		}
 
+		System.out.println("before starting thread");
 		rfbThread = new Thread(this);
 		rfbThread.start();
 	}
@@ -175,7 +188,8 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	//
 
 	public void run() {
-
+		System.out.println("run");
+		
 		if (showControls) {
 			buttonPanel = new ButtonPanel(this);
 			connStatusLabel = new JLabel("Status: initializing ...");
@@ -316,7 +330,7 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 					new Integer(maxHeight) };
 			vncCanvas = (VncCanvas) cstr.newInstance(argObjects);
 		} catch (Exception e) {
-			System.out.println("Warning: Java 2D API is not available");
+			logger.warn("Java 2D API is not available");
 		}
 
 		// If we failed to create VncCanvas2D, use old VncCanvas.
@@ -335,7 +349,7 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 			vncCanvas.processNormalProtocol();
 		} catch (Exception e) {
 			if (rfbThread == null) {
-				System.out.println("Ignoring RFB socket exceptions"
+				logger.info("Ignoring RFB socket exceptions"
 						+ " because applet is stopping");
 			} else {
 				throw e;
@@ -481,7 +495,7 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 		rfb.writeClientInit();
 		rfb.readServerInit();
 
-		System.out.println("Desktop size is " + rfb.server.fb_width + " x "
+		logger.info("Desktop size is " + rfb.server.fb_width + " x "
 				+ rfb.server.fb_height);
 	}
 
@@ -529,18 +543,18 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 			long kbitsPerSecond = rfb.kbitsPerSecond();
 			if (nEncodingsSaved < 1) {
 				// Choose Tight or ZRLE encoding for the very first update.
-				System.out.println("Using Tight/ZRLE encodings");
+				logger.info("Using Tight/ZRLE encodings");
 				preferredEncoding = Encodings.EncodingTight;
 			} else if (kbitsPerSecond > 2000
 					&& encodingsSaved.get(0) != Encodings.EncodingHextile) {
 				// Switch to Hextile if the connection speed is above 2Mbps.
-				System.out.println("Throughput " + kbitsPerSecond
+				logger.info("Throughput " + kbitsPerSecond
 						+ " kbit/s - changing to Hextile encoding");
 				preferredEncoding = Encodings.EncodingHextile;
 			} else if (kbitsPerSecond < 1000
 					&& encodingsSaved.get(0) != Encodings.EncodingTight) {
 				// Switch to Tight/ZRLE if the connection speed is below 1Mbps.
-				System.out.println("Throughput " + kbitsPerSecond
+				logger.info("Throughput " + kbitsPerSecond
 						+ " kbit/s - changing to Tight/ZRLE encodings");
 				preferredEncoding = Encodings.EncodingTight;
 			} else {
@@ -696,7 +710,7 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 				rfb.closeSession();
 			}
 
-			System.out.println("Recording the session in " + sessionFileName);
+			logger.info("Recording the session in " + sessionFileName);
 			rfb.startSession(sessionFileName);
 			recordingActive = true;
 		}
@@ -720,7 +734,7 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 				options.setColorFormat();
 
 				rfb.closeSession();
-				System.out.println("Session recording stopped.");
+				logger.info("Session recording stopped.");
 			}
 			sessionFileName = null;
 			recordingActive = false;
@@ -733,13 +747,49 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	// param_name/param_value pairs where the names and values correspond to
 	// those expected in the html applet tag source.
 	//
+	
+	private String getParameter(String name, String default_value){
+		String value = readParameter(name, false);
+		return value != null ? value : default_value;
+	}
+	
+	private void setLogLevel(String log_level){
+		switch (log_level.charAt(0)) {
+		case 'd':
+		case 'D':
+			logger.setLevel(Level.DEBUG);
+			break;
+		case 'i':
+		case 'I':
+			logger.setLevel(Level.INFO);
+			break;
+		case 'w':
+		case 'W':
+			logger.setLevel(Level.WARN);
+			break;
+		case 'e':
+		case 'E':
+			logger.setLevel(Level.ERROR);
+			break;
+		case 'f':
+		case 'F':
+			logger.setLevel(Level.FATAL);
+			break;
+		default:
+			System.err.println(": Invalid debug level: "
+					+ log_level.charAt(0));
+		}
+	}
 
 	void readParameters() {
 		host = readParameter("host", true);
 		port = readIntParameter("port", 5900);
+		log_level = getParameter("log_level", "warn");
 
 		// Read "ENCPASSWORD" or "PASSWORD" parameter if specified.
 		readPasswordParameters();
+		
+		System.out.println("password");
 
 		windowTitle = readParameter("window_title", false);
 		if (windowTitle == null) {
@@ -815,7 +865,7 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	}
 
 	public String readParameter(String name, boolean required) {
-		System.out.println("read parameter " + name);
+		logger.info("read parameter " + name);
 		if (inAnApplet) {
 			String s = getParameter(name);
 			if ((s == null) && required) {
@@ -870,7 +920,6 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	//
 
 	synchronized public void disconnect() {
-		System.out.println("Disconnecting");
 
 		if (vncCanvas != null) {
 			double sec = (System.currentTimeMillis() - vncCanvas.statStartTime) / 1000.0;
@@ -878,14 +927,14 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 			long nRealRects = vncCanvas.statNumPixelRects;
 			long nPseudoRects = vncCanvas.statNumTotalRects
 					- vncCanvas.statNumPixelRects;
-			System.out.println("Updates received: " + vncCanvas.statNumUpdates
+			logger.info("Updates received: " + vncCanvas.statNumUpdates
 					+ " (" + nRealRects + " rectangles + " + nPseudoRects
 					+ " pseudo), " + rate + " updates/sec");
 			long numRectsOther = nRealRects - vncCanvas.statNumRectsTight
 					- vncCanvas.statNumRectsZRLE
 					- vncCanvas.statNumRectsHextile - vncCanvas.statNumRectsRaw
 					- vncCanvas.statNumRectsCopy;
-			System.out.println("Rectangles:" + " Tight="
+			logger.info("Rectangles:" + " Tight="
 					+ vncCanvas.statNumRectsTight + "(JPEG="
 					+ vncCanvas.statNumRectsTightJPEG + ") ZRLE="
 					+ vncCanvas.statNumRectsZRLE + " Hextile="
@@ -897,7 +946,7 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 			long compressed = vncCanvas.statNumBytesEncoded;
 			if (compressed > 0) {
 				double ratio = Math.round((double) raw / compressed * 1000) / 1000.0;
-				System.out.println("Pixel data: "
+				logger.info("Pixel data: "
 						+ vncCanvas.statNumBytesDecoded + " bytes, "
 						+ vncCanvas.statNumBytesEncoded + " compressed, ratio "
 						+ ratio);
@@ -924,7 +973,7 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	//
 
 	synchronized public void fatalError(String str) {
-		System.out.println(str);
+		logger.error(str);
 
 		if (inAnApplet) {
 			// vncContainer null, applet not inited,
@@ -936,15 +985,15 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	}
 
 	synchronized public void fatalError(String str, Exception e) {
-
+		logger.error(str);
+		
 		if (rfb != null && rfb.closed()) {
 			// Not necessary to show error message if the error was caused
 			// by I/O problems after the rfb.close() method call.
-			System.out.println("RFB thread finished");
+			logger.info("RFB thread finished");
 			return;
 		}
 
-		System.out.println(str);
 		e.printStackTrace();
 
 		if (rfb != null)
@@ -1000,7 +1049,7 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	//
 
 	public void stop() {
-		System.out.println("Stopping applet");
+		logger.info("Stopping applet");
 		rfbThread = null;
 	}
 
@@ -1009,7 +1058,7 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	//
 
 	public void destroy() {
-		System.out.println("Destroying applet");
+		logger.info("Destroying applet");
 
 		vncContainer.removeAll();
 		options.dispose();
@@ -1064,7 +1113,7 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	//
 
 	public void windowClosing(WindowEvent evt) {
-		System.out.println("Closing window");
+		logger.info("Closing window");
 		if (rfb != null)
 			disconnect();
 

@@ -4,4 +4,5 @@ bin
 .settings
 **.svn**
 *.class
+examples/applet/
 src/com/tigervnc/rfb/message/KeyboardEventMap.java
