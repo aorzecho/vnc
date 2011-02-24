@@ -40,7 +40,8 @@ form {
     <footer></footer> 
 
     <script src="//ajax.googleapis.com/ajax/libs/dojo/1.5/dojo/dojo.xd.js"></script>
-    <script src="/js/display.js"></script>
+    <script src="/js/applet.js"></script>
+    <script src="/js/vnc.js"></script>
     
   <script>
 dojo.ready(function(){
@@ -49,13 +50,12 @@ dojo.ready(function(){
     return {
       host: dojo.byId('host').value,
       port: dojo.byId('port').value,
-      controls: dojo.byId('controls').value,
-      appendto: "applets"
+      controls: dojo.byId('controls').value
     };
   }
 
   dojo.query('#startButton').onclick(function(){
-    display.start(getArgs());
+    vnc.start('applets', getArgs());
   });
 });
     </script>

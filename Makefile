@@ -1,6 +1,6 @@
 OUTPUT = bin
 SOURCES = $(shell find src -type f -name \*.java)
-LIBS = libs/log4j-java1.1.jar
+LIBS = lib/log4j-java1.1.jar
 FLAGS = -target 1.5 -classpath $(LIBS) -d $(OUTPUT)
 KEYSTORE_ALIAS = "dev"
 KEYSTORE_PASS = "123456"
@@ -13,7 +13,11 @@ keymap:
 build: keymap
 	@(javac $(FLAGS) $(SOURCES))
 
-jar: build
+unjarlibs:
+	cd bin; find ../lib -type f -name \*.jar -exec jar xfv {} \;
+	rm -rf bin/META-INF
+
+jar: build unjarlibs
 	@(jar cmf manifest.mf vnc.jar -C bin/ .)
 
 sign: jar
@@ -25,4 +29,4 @@ deploy: sign
 	@(cp vnc.jar examples/applet/)
 
 runserver: deploy
-	@(./examples/dev_appserver.py)
+	@(python ./examples/dev_appserver.py)
