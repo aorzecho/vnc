@@ -9,13 +9,14 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import com.tigervnc.Util;
+import com.tigervnc.VncViewer;
 import com.tigervnc.rfb.Encodings;
 import com.tigervnc.rfb.RfbUtil;
-import com.tigervnc.vncviewer.Util;
 
 public class KeyboardEvent implements IServerMessage {
 
-	private static Logger logger = Logger.getLogger(KeyboardEvent.class);
+	private static Logger logger = Logger.getLogger(VncViewer.class);
 	
 	public class KeyUndefinedException extends Exception {}
 
@@ -206,7 +207,7 @@ public class KeyboardEvent implements IServerMessage {
 		byte[] events = new byte[0];
 		if (_extra_preceding_events != null) {
 			for (KeyboardEvent e : _extra_preceding_events) {
-				logger.info("extra " + e);
+				logger.debug("extra " + e);
 				events = concat(events, e.getBytes());
 			}
 		}
@@ -215,7 +216,7 @@ public class KeyboardEvent implements IServerMessage {
 			return events;
 		}
 
-		logger.info(this);
+		logger.debug(this);
 		byte[] ev;
 		if (extended_key_event) {
 			ev = getExtendedKeyEvent();
@@ -303,7 +304,7 @@ public class KeyboardEvent implements IServerMessage {
 		} else {
 			if (!keys_pressed.containsKey(_keycode)) {
 				// Do press ourself.
-				logger.info("Writing key pressed event for " + _keysym
+				logger.debug("Writing key pressed event for " + _keysym
 						+ " keycode: " + _keycode);
 				addExtraEvent(new KeyboardEvent(_keysym, _keycode, true));
 			} else {

@@ -38,6 +38,8 @@ import java.net.Socket;
 import java.util.List;
 import java.util.Map;
 
+import com.tigervnc.SocketFactory;
+import com.tigervnc.VncViewer;
 import com.tigervnc.rfb.message.Authentication;
 import com.tigervnc.rfb.message.ClientCutText;
 import com.tigervnc.rfb.message.FramebufferUpdateRequest;
@@ -48,8 +50,6 @@ import com.tigervnc.rfb.message.SetEncodings;
 import com.tigervnc.rfb.message.SetPixelFormat;
 import com.tigervnc.rfb.message.Version;
 import com.tigervnc.rfb.message.KeyboardEvent.KeyUndefinedException;
-import com.tigervnc.vncviewer.SocketFactory;
-import com.tigervnc.vncviewer.VncViewer;
 
 public class RfbProto {
 

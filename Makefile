@@ -7,8 +7,11 @@ KEYSTORE_PASS = "123456"
 
 all: sign
 
+clean:
+	@(rm -rf $(OUTPUT);	mkdir $(OUTPUT))
+
 keymap:
-	@(cd src/com/tigervnc/vncviewer;./keymap-gen.py)
+	@(cd src/com/tigervnc/;./keymap-gen.py)
 
 build: keymap
 	@(javac $(FLAGS) $(SOURCES))
@@ -17,7 +20,7 @@ unjarlibs:
 	cd bin; find ../lib -type f -name \*.jar -exec jar xfv {} \;
 	rm -rf bin/META-INF
 
-jar: build unjarlibs
+jar: clean build unjarlibs
 	@(jar cmf manifest.mf vnc.jar -C bin/ .)
 
 sign: jar

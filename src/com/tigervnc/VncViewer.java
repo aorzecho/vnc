@@ -25,7 +25,7 @@
 // a VNC desktop.
 //
 
-package com.tigervnc.vncviewer;
+package com.tigervnc;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
@@ -60,18 +60,18 @@ import org.apache.log4j.Logger;
 
 import com.tigervnc.rfb.Encodings;
 import com.tigervnc.rfb.RfbProto;
-import com.tigervnc.vncviewer.ui.AuthPanel;
-import com.tigervnc.vncviewer.ui.ButtonPanel;
-import com.tigervnc.vncviewer.ui.ClipboardFrame;
-import com.tigervnc.vncviewer.ui.OptionsFrame;
-import com.tigervnc.vncviewer.ui.RecordingFrame;
-import com.tigervnc.vncviewer.ui.ReloginPanel;
-import com.tigervnc.vncviewer.ui.VncCanvas;
+import com.tigervnc.ui.AuthPanel;
+import com.tigervnc.ui.ButtonPanel;
+import com.tigervnc.ui.ClipboardFrame;
+import com.tigervnc.ui.OptionsFrame;
+import com.tigervnc.ui.RecordingFrame;
+import com.tigervnc.ui.ReloginPanel;
+import com.tigervnc.ui.VncCanvas;
 
 public class VncViewer extends JApplet implements java.lang.Runnable,
 		WindowListener, ComponentListener {
 
-	public static Logger logger = Logger.getLogger(VncViewer.class);
+	protected static Logger logger = Logger.getLogger(VncViewer.class);
 	static{
 		logger.setLevel(Level.ERROR);
 	}
@@ -85,7 +85,6 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	//
 
 	public static void main(String[] argv) {
-		System.out.println("foo");
 		VncViewer v = new VncViewer();
 		v.mainArgs = argv;
 		VncViewer.inAnApplet = false;
@@ -142,7 +141,7 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	// init()
 	//
 
-	public void init() {	
+	public void init() {
 		BasicConfigurator.configure();
 		
 		readParameters();
@@ -156,7 +155,6 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 			vncContainer = this;
 		}
 		
-		System.out.println("here");
 		recordingSync = new Object();
 
 		options = new OptionsFrame(this);
@@ -175,7 +173,6 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 			vncFrame.addComponentListener(this);
 		}
 
-		System.out.println("before starting thread");
 		rfbThread = new Thread(this);
 		rfbThread.start();
 	}
@@ -188,7 +185,6 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	//
 
 	public void run() {
-		System.out.println("run");
 		
 		if (showControls) {
 			buttonPanel = new ButtonPanel(this);
@@ -784,12 +780,10 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	void readParameters() {
 		host = readParameter("host", true);
 		port = readIntParameter("port", 5900);
-		log_level = getParameter("log_level", "warn");
+		log_level = getParameter("log_level", "info");
 
 		// Read "ENCPASSWORD" or "PASSWORD" parameter if specified.
 		readPasswordParameters();
-		
-		System.out.println("password");
 
 		windowTitle = readParameter("window_title", false);
 		if (windowTitle == null) {

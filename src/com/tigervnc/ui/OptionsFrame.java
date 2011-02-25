@@ -27,14 +27,14 @@
 // It sets the encodings array and some booleans.
 //
 
-package com.tigervnc.vncviewer.ui;
+package com.tigervnc.ui;
 
 import java.awt.*;
 import java.awt.event.*;
 
+import com.tigervnc.VncViewer;
 import com.tigervnc.rfb.Encodings;
 import com.tigervnc.rfb.RfbProto;
-import com.tigervnc.vncviewer.VncViewer;
 
 public class OptionsFrame extends Frame
   implements WindowListener, ActionListener, ItemListener {

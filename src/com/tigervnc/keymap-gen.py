@@ -32,7 +32,7 @@ for row in reader:
         rfb = ((x & 0x100)>>1) | (x & 0x7f);
         lines.append( "java2rfb[KeyEvent.%s] = %s;" % (j, rfb) )
 
-file = open("../rfb/message/KeyboardEventMap.java", "wb")
+file = open("rfb/message/KeyboardEventMap.java", "wb")
 
 file.write(template % ("\n".join(lines)))
 file.close()

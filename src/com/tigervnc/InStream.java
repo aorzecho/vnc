@@ -21,7 +21,7 @@
 // Representation).
 //
 
-package com.tigervnc.vncviewer;
+package com.tigervnc;
 
 abstract public class InStream {
 

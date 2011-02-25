@@ -1,4 +1,4 @@
-package com.tigervnc.vncviewer;
+package com.tigervnc;
 
 import java.applet.Applet;
 
@@ -7,13 +7,13 @@ public class VncApplet extends Applet {
 	private String window_title;
 	private String port;
 	private String host;
+	private String log_level;
 
 	public void init() {
 		port = getRequiredParameter("port");
 		host = getRequiredParameter("host");
-		window_title = "VNC Example";
-		System.out.println("Starting display on " + host
-				+ ":" + port);
+		window_title = getParameter("title", "Remote Desktop Viewer");
+		log_level = getParameter("log_level", "info");
 		startVNC();
 	}
 
@@ -24,7 +24,8 @@ public class VncApplet extends Applet {
 				"port", port,
 				"window_title", window_title, 
 				"show_controls", "no",
-				"new_window", "no"
+				"new_window", "no",
+				"log_level", log_level
 		});
 		
 		// the only reason to do so is that system.exit shuts down
@@ -39,4 +40,13 @@ public class VncApplet extends Applet {
 		}
 		return value;
 	}
+
+    protected String getParameter(String name, String default_value){
+		String value = getParameter(name);
+        if(value == null){
+            return default_value;
+        }
+        return value;
+	}
+
 }

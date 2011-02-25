@@ -17,12 +17,12 @@
 //  USA.
 //
 
-package com.tigervnc.vncviewer.ui;
+package com.tigervnc.ui;
 
 import java.awt.*;
 import java.io.*;
 
-import com.tigervnc.vncviewer.VncViewer;
+import com.tigervnc.VncViewer;
 
 //
 // VncCanvas2 is a special version of VncCanvas which may use Java 2 API.

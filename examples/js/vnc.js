@@ -7,13 +7,13 @@ dojo.require("dojo.string");
     start: function(node, args){
 
       $.applet.inject(node, {
-        archive: '/applet/vnc.jar',
-        code:"com.tigervnc.vncviewer.VncApplet",
+        archive: '/applet/vnc.jar?v=' + new Date().getTime(),
+        code:"com.tigervnc.VncApplet",
         port: args.port,
         host: args.host,
-        window_title: "VNC Viewer",
+        title: args.title,
         new_window: "Yes",
-        debug_level: "debug"
+        log_level: "error"
       });
     }
   };   

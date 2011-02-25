@@ -23,13 +23,13 @@
 // after fatal errors or disconnect
 //
 
-package com.tigervnc.vncviewer.ui;
+package com.tigervnc.ui;
 
 import java.awt.*;
 import java.awt.event.*;
 import java.applet.*;
 
-import com.tigervnc.vncviewer.VncViewer;
+import com.tigervnc.VncViewer;
 
 //
 // The panel which implements the Relogin button

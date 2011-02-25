@@ -22,13 +22,13 @@
 // FBS (FrameBuffer Stream) files.
 //
 
-package com.tigervnc.vncviewer.ui;
+package com.tigervnc.ui;
 
 import java.io.*;
 import java.awt.*;
 import java.awt.event.*;
 
-import com.tigervnc.vncviewer.VncViewer;
+import com.tigervnc.VncViewer;
 
 public class RecordingFrame extends Frame
   implements WindowListener, ActionListener {

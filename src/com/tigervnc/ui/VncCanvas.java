@@ -21,7 +21,7 @@
 //  USA.
 //
 
-package com.tigervnc.vncviewer.ui;
+package com.tigervnc.ui;
 
 import java.awt.Canvas;
 import java.awt.Color;
@@ -47,6 +47,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.tigervnc.RecordOutputStream;
+import com.tigervnc.Util;
+import com.tigervnc.VncViewer;
 import com.tigervnc.decoder.CoRREDecoder;
 import com.tigervnc.decoder.CopyRectDecoder;
 import com.tigervnc.decoder.HextileDecoder;
@@ -61,9 +64,6 @@ import com.tigervnc.rfb.RfbInputStream;
 import com.tigervnc.rfb.RfbProto;
 import com.tigervnc.rfb.message.KeyboardEvent;
 import com.tigervnc.rfb.message.KeyboardEvent.KeyUndefinedException;
-import com.tigervnc.vncviewer.RecordOutputStream;
-import com.tigervnc.vncviewer.Util;
-import com.tigervnc.vncviewer.VncViewer;
 
 //
 // VncCanvas is a subclass of Canvas which draws a VNC desktop on it.

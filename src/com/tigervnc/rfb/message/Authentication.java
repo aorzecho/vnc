@@ -3,7 +3,7 @@ package com.tigervnc.rfb.message;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-import com.tigervnc.vncviewer.DesCipher;
+import com.tigervnc.DesCipher;
 
 public class Authentication extends ClientMessage {
 

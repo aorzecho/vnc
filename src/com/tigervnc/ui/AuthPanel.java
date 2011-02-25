@@ -18,7 +18,7 @@
 //  USA.
 //
 
-package com.tigervnc.vncviewer.ui;
+package com.tigervnc.ui;
 
 import java.awt.Button;
 import java.awt.Color;
@@ -35,7 +35,7 @@ import javax.swing.JLabel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
-import com.tigervnc.vncviewer.VncViewer;
+import com.tigervnc.VncViewer;
 
 //
 // The panel which implements the user authentication scheme

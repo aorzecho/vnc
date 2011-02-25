@@ -23,7 +23,7 @@
 // HTTP proxies supporting the HTTP CONNECT method.
 //
 
-package com.tigervnc.vncviewer;
+package com.tigervnc;
 
 import java.net.*;
 import java.io.*;

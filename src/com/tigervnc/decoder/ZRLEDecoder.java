@@ -1,10 +1,10 @@
 package com.tigervnc.decoder;
 
+import com.tigervnc.InStream;
+import com.tigervnc.MemInStream;
+import com.tigervnc.ZlibInStream;
 import com.tigervnc.rfb.RfbInputStream;
-import com.tigervnc.vncviewer.InStream;
-import com.tigervnc.vncviewer.ZlibInStream;
 import java.awt.Graphics;
-import com.tigervnc.vncviewer.MemInStream;
 import java.awt.Color;
 import java.awt.Toolkit;
 import java.awt.image.MemoryImageSource;

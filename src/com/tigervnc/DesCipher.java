@@ -70,7 +70,7 @@
 // fine Java utilities: http://www.acme.com/java/
 
 
-package com.tigervnc.vncviewer;
+package com.tigervnc;
 
 import java.io.*;
 

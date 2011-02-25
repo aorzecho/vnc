@@ -23,7 +23,7 @@
 // VNCViewer desktop window.
 //
 
-package com.tigervnc.vncviewer.ui;
+package com.tigervnc.ui;
 
 import java.awt.Button;
 import java.awt.FlowLayout;
@@ -35,8 +35,8 @@ import java.io.IOException;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
+import com.tigervnc.VncViewer;
 import com.tigervnc.rfb.RfbProto;
-import com.tigervnc.vncviewer.VncViewer;
 
 
 public class ButtonPanel extends JPanel implements ActionListener {

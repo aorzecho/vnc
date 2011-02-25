@@ -22,7 +22,7 @@
 // FBS files are used to save RFB sessions for later playback.
 //
 
-package com.tigervnc.vncviewer;
+package com.tigervnc;
 
 import java.io.*;
 

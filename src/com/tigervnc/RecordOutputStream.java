@@ -1,4 +1,4 @@
-package com.tigervnc.vncviewer;
+package com.tigervnc;
 
 import java.io.DataOutput;
 import java.io.IOException;

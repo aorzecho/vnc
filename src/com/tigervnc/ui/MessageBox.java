@@ -17,11 +17,11 @@
  * USA.
  */
 
-package com.tigervnc.vncviewer.ui;
+package com.tigervnc.ui;
 
 import java.awt.*;
 
-public class MessageBox extends com.tigervnc.vncviewer.ui.Dialog {
+public class MessageBox extends com.tigervnc.ui.Dialog {
 
   public static final int MB_OK = 0;
   public static final int MB_OKAYCANCEL = 1;
