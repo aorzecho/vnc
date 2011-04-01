@@ -7,7 +7,7 @@ dojo.require("dojo.string");
     start: function(node, args){
 
       $.applet.inject(node, {
-        archive: '/applet/vnc.jar?v=' + new Date().getTime(),
+        archive: 'vnc.jar?v=' + new Date().getTime(),
         code:"com.tigervnc.VncApplet",
         port: args.port,
         host: args.host,

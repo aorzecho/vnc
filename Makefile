@@ -28,8 +28,8 @@ sign: jar
 	@(mv vncs.jar vnc.jar)
 
 deploy: sign
-	@(mkdir -p examples/applet)
-	@(cp vnc.jar examples/applet/)
+	@(mkdir -p examples)
+	@(cp vnc.jar examples)
 
 runserver: deploy
-	@(python ./examples/dev_appserver.py)
+	@(cd ./examples/; python -m SimpleHTTPServer)
