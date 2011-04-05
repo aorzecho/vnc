@@ -411,6 +411,7 @@ public class VncCanvas extends Canvas implements KeyListener, MouseListener,
 	}
 
 	public void resizeDesktopFrame() {
+		System.err.println("resizeDesktopFrame VncCanvas, width: " + scaledWidth + ", scaledHeight: " + scaledHeight);
 		setSize(scaledWidth, scaledHeight);
 
 		// FIXME: Find a better way to determine correct size of a

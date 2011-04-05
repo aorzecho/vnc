@@ -493,6 +493,7 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 
 		logger.info("Desktop size is " + rfb.server.fb_width + " x "
 				+ rfb.server.fb_height);
+		
 	}
 
 	String askUser() throws Exception {

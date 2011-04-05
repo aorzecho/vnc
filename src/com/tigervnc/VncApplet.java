@@ -31,6 +31,14 @@ public class VncApplet extends Applet {
 		// the only reason to do so is that system.exit shuts down
 		// FF and Safari on the Mac.
 		VncViewer.inAnApplet = true;
+		toFront();
+		
+	}
+	
+	// Bring the applet to the front.
+	private void toFront(){
+		setVisible(true);
+		requestFocus();
 	}
 
 	private String getRequiredParameter(String name) {
