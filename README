@@ -14,11 +14,12 @@ resulting key character.
 Installation
 ============
 
-To run tinydocs you must have the follow installed:
+To run Java VNC you must have the follow installed:
 
- * Python 2.5+
+ * Java
+ * Python 2.5+ (for devel. server that serves applet)
 
-There are three basic ways to run Java VNC:
+There are two basic ways to run Java VNC:
 
   1. Run the applet
   
