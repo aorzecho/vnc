@@ -5,7 +5,7 @@ FLAGS = -target 1.5 -classpath $(LIBS) -d $(OUTPUT)
 KEYSTORE_ALIAS = "dev"
 KEYSTORE_PASS = "123456"
 
-all: sign
+all: deploy
 
 clean:
 	@(rm -rf $(OUTPUT);	mkdir $(OUTPUT))
@@ -29,7 +29,7 @@ sign: jar
 	@(mv vncs.jar vnc.jar)
 
 deploy: sign
-	@(mkdir -p examples)
+	@(mkdir -p examples/lib)
 	@(mv lib/log4j-java1.1.signed.jar examples/lib/log4j-java1.1.jar)
 	@(cp vnc.jar examples)
 
