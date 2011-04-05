@@ -25,10 +25,12 @@ jar: clean build unjarlibs
 
 sign: jar
 	@(jarsigner -storepass $(KEYSTORE_PASS) -signedjar vncs.jar vnc.jar $(KEYSTORE_ALIAS))
+	@(jarsigner -storepass $(KEYSTORE_PASS) -signedjar lib/log4j-java1.1.signed.jar lib/log4j-java1.1.jar $(KEYSTORE_ALIAS))
 	@(mv vncs.jar vnc.jar)
 
 deploy: sign
 	@(mkdir -p examples)
+	@(mv lib/log4j-java1.1.signed.jar examples/lib/log4j-java1.1.jar)
 	@(cp vnc.jar examples)
 
 runserver: deploy
