@@ -32,4 +32,53 @@ There are two basic ways to run Java VNC:
   $ make 
   $ java -jar vnc.jar HOST localhost PORT 5900
 
+Keyboard Handling
+================
 
+VNC is notoriously bad at providing the same keyboard output at the
+server that was input at the client when using non-US keyboard
+languages. This is because keyboard events are sent in a lossy
+encoding. See
+http://berrange.com/posts/2010/07/04/more-than-you-or-i-ever-wanted-to-know-about-virtual-keyboard-handling/
+for a thorough probe of this, go read that post if you want to
+understand the following part.
+
+When the server and client support lossless key events, known as
+extended key events, the key code has effect, and not symbols. That
+means it's the keyboard language of the virtual machine OS that
+decides which symbols to output, and neither the host OS nor client
+OS!
+
+A VNC server which incorporate lossless key events, known as, extended
+key events, is incorporated into qemu/kvm. The Java VNC client
+supports extended key events when available at the server. That means,
+when the server supports it, it's possible to output all special
+characters at the virtual server.
+
+*Mac:*
+
+The special Alt Gr modifier is not available on Mac keyboards. That
+key is mapped to Alt + Ctrl. 
+
+In addition, many special characters are placed entirely different on
+Mac keyboards compared to anything else. To get these special
+characters you need to type on the keyboard as if it were a keyboard
+on the virtual machine OS.
+
+For instance if you run VNC client on the MAC is connected to a linux
+server with danish keyboard layout:
+
+| = Alt + Ctrl + '
+\ = Alt + Ctrl + <
+@ = Alt + Ctrl + 2
+
+Snow Leopard contains a bug that makes it impossible to type backslash
+with Alt + Ctrl + <
+
+In that case:
+\ = Alt + <
+
+*All:*
+
+The client OS might intercept Ctrl + Alt + Delete. Instead type Ctrl +
+Alt + Backspace.
