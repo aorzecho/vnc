@@ -8,12 +8,14 @@ public class VncApplet extends Applet {
 	private String port;
 	private String host;
 	private String log_level;
+	private String show_controls;
 
 	public void init() {
 		port = getRequiredParameter("port");
 		host = getRequiredParameter("host");
 		window_title = getParameter("title", "Remote Desktop Viewer");
 		log_level = getParameter("log_level", "info");
+		show_controls = getParameter("show_controls", "no");
 		startVNC();
 	}
 
@@ -23,7 +25,7 @@ public class VncApplet extends Applet {
 				"host", host, 
 				"port", port,
 				"window_title", window_title, 
-				"show_controls", "no",
+				"show_controls", show_controls,
 				"new_window", "no",
 				"log_level", log_level
 		});

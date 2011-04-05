@@ -429,6 +429,8 @@ public class VncCanvas extends Canvas implements KeyListener, MouseListener,
 		Dimension frameSize = viewer.vncFrame.getSize();
 		Dimension newSize = frameSize;
 
+		System.err.println("screenSize:" + screenSize + " frameSize: " + frameSize + " newSize:" + newSize);
+		
 		// Reduce Screen Size by 30 pixels in each direction;
 		// This is a (poor) attempt to account for
 		// 1) Menu bar on Macintosh (should really also account for

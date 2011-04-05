@@ -12,6 +12,7 @@ dojo.require("dojo.string");
         port: args.port,
         host: args.host,
         title: args.title,
+        show_controls: args.show_controls,
         new_window: "Yes",
         log_level: "error"
       });
