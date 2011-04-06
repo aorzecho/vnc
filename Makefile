@@ -1,6 +1,6 @@
 OUTPUT = bin
 SOURCES = $(shell find src -type f -name \*.java)
-LIBS = lib/log4j-java1.1.jar
+LIBS = lib/log4j-java1.1.jar:lib/plugin.jar
 FLAGS = -target 1.5 -classpath $(LIBS) -d $(OUTPUT)
 KEYSTORE_ALIAS = "dev"
 KEYSTORE_PASS = "123456"
@@ -17,7 +17,9 @@ build: keymap
 	@(javac $(FLAGS) $(SOURCES))
 
 unjarlibs:
-	cd bin; find ../lib -type f -name \*.jar -exec jar xfv {} \;
+	cd bin; \
+	find ../lib -type f -name \*.jar \
+      -not -name plugin.jar -exec jar xfv {} \;
 	rm -rf bin/META-INF
 
 jar: clean build unjarlibs
