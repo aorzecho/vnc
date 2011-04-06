@@ -1,6 +1,5 @@
 bin
 .classpath
-.project
 .settings
 **.svn**
 *.class
