@@ -4,4 +4,5 @@ bin
 **.svn**
 *.class
 examples/vnc.jar
+examples/lib
 src/com/tigervnc/rfb/message/KeyboardEventMap.java
