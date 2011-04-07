@@ -10,17 +10,17 @@ dojo.require("dojo.string");
   
     inject: function(node, args){
       node = d.byId(node);
-      var params = [];
+      var id = args.id,
+          width = args.width || "1",
+          heigth = args.heigth || "1",
+          params = [];
+
       for(var k in args){
-         if (args.hasOwnProperty(k)) {
-           params.push(this._paramify(k, args[k]));
-         }
+        params.push(this._paramify(k, args[k]));
       }
-      var width = args.width || "1";
-      var heigth = args.heigth || "1";
 
       var t = [
-        '<object type="application/x-java-applet" width="' + width + '" height="' + heigth + '">',
+        '<object id="' + id + '" type="application/x-java-applet" width="' + width + '" height="' + heigth + '">',
         '  <param name="mayscript" value="true" />',
         params.join('\n'),
         '</object>'].join('\n');
