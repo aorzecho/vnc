@@ -2,15 +2,22 @@ package com.tigervnc;
 
 import java.applet.Applet;
 
+import org.apache.log4j.Logger;
+
 public class VncLiveConnectApplet extends Applet2 {
 
+	protected static Logger logger = Logger.getLogger(VncLiveConnectApplet.class);
+	
 	private String window_title;
 	private String port;
 	private String host;
 	private String log_level;
 	private String show_controls;
 
+	@Override
 	public void init() {
+		logger.info("destroy");
+		super.init();
 		port = getRequiredParameter("port");
 		host = getRequiredParameter("host");
 		window_title = getParameter("title", "Remote Desktop Viewer");
@@ -19,9 +26,17 @@ public class VncLiveConnectApplet extends Applet2 {
 		startVNC();
 		publishEvent(Event.INIT);
 	}
+	
+	@Override
+	public void destroy(){
+		logger.info("destroy");
+		publishEvent(Event.INIT);
+		super.destroy();
+	}
 
 	public void startVNC() {
-		System.out.println("Starting vnc ...");
+		logger.info("startVNC");
+		
 		VncViewer.main(new String[] { 
 				"host", host, 
 				"port", port,
@@ -34,6 +49,7 @@ public class VncLiveConnectApplet extends Applet2 {
 		// the only reason to do so is that system.exit shuts down
 		// FF and Safari on the Mac.
 		VncViewer.inAnApplet = true;
+		VncViewer.applet = this;
 		toFront();
 	}
 	
@@ -45,7 +61,8 @@ public class VncLiveConnectApplet extends Applet2 {
 	
 	private enum Event {
 		INIT("Init"),
-		CONNECTION_ERROR("ConnectinError");
+		DESTROY("Destroy"),
+		CONNECTION_ERROR("ConnectionError");
 
 		private String name;
 

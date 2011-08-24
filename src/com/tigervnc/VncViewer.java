@@ -27,6 +27,7 @@
 
 package com.tigervnc;
 
+import java.applet.Applet;
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -78,6 +79,7 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	
 	public static boolean inAnApplet = true;
 	public static boolean inSeparateFrame = false;
+	public static Applet applet;
 
 	//
 	// main() is called when run as a java program from the command line.
@@ -85,6 +87,7 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	//
 
 	public static void main(String[] argv) {
+		System.out.println("main 10");
 		VncViewer v = new VncViewer();
 		v.mainArgs = argv;
 		VncViewer.inAnApplet = false;
@@ -169,6 +172,7 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 		eightBitColorsDef = null;
 
 		if (inSeparateFrame) {
+			System.out.println("adding window listener");
 			vncFrame.addWindowListener(this);
 			vncFrame.addComponentListener(this);
 		}
@@ -801,6 +805,7 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 		// "Show Controls" set to "No" disables button panel.
 		showControls = true;
 		str = readParameter("show_controls", false);
+		System.out.println("str:" + str);
 		if (str != null && str.equalsIgnoreCase("No"))
 			showControls = false;
 
@@ -1108,7 +1113,7 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	//
 
 	public void windowClosing(WindowEvent evt) {
-		logger.info("Closing window");
+		logger.info("windowClosing");
 		if (rfb != null)
 			disconnect();
 
@@ -1117,6 +1122,9 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 		if (!inAnApplet) {
 			System.exit(0);
 		}
+		else{
+			if(VncViewer.applet != null){VncViewer.applet.destroy();}			
+		}
 	}
 
 	//
@@ -1124,9 +1132,11 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	//
 
 	public void windowActivated(WindowEvent evt) {
+		logger.info("windowActivated");
 	}
 
 	public void windowDeactivated(WindowEvent evt) {
+		logger.info("windowDeactived");
 		try {
 			rfb.releaseAllKeys();
 		} catch (IOException e) {
@@ -1135,14 +1145,19 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	}
 
 	public void windowOpened(WindowEvent evt) {
+		logger.info("windowOpened");
 	}
 
+	@Override
 	public void windowClosed(WindowEvent evt) {
+		logger.info("windowClosed");
 	}
 
 	public void windowIconified(WindowEvent evt) {
+		logger.info("windowIconified");
 	}
 
 	public void windowDeiconified(WindowEvent evt) {
+		logger.info("windowDeiconified");
 	}
 }
