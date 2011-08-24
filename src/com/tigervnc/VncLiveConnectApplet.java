@@ -6,7 +6,7 @@ import org.apache.log4j.Logger;
 
 public class VncLiveConnectApplet extends Applet2 {
 
-	protected static Logger logger = Logger.getLogger(VncLiveConnectApplet.class);
+	protected static Logger logger = Logger.getLogger(VncViewer.class);
 	
 	private String window_title;
 	private String port;
@@ -30,7 +30,7 @@ public class VncLiveConnectApplet extends Applet2 {
 	@Override
 	public void destroy(){
 		logger.info("destroy");
-		publishEvent(Event.INIT);
+		publishEvent(Event.DESTROY);
 		super.destroy();
 	}
 
