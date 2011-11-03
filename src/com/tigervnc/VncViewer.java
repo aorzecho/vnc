@@ -70,7 +70,6 @@ public class VncViewer implements java.lang.Runnable,
 		logger.setLevel(Level.INFO);
 	}
 	public static boolean inAnApplet = true;
-	public static boolean inSeparateFrame = false;
 	public static Applet applet;
 
 	//
@@ -79,7 +78,7 @@ public class VncViewer implements java.lang.Runnable,
 	//
 
 	public static void main(String[] argv) {
-		VncViewer v = new VncViewer(argv);
+		new VncViewer(argv);
 	}
 
 	public String[] mainArgs;
@@ -130,11 +129,8 @@ public class VncViewer implements java.lang.Runnable,
 		cursorUpdatesDef = null;
 		eightBitColorsDef = null;
 
-
-		if (inSeparateFrame) {
-			vncFrame.addWindowListener(this);
-			vncFrame.addComponentListener(this);
-		}
+		vncFrame.addWindowListener(this);
+		vncFrame.addComponentListener(this);
 
 		rfbThread = new Thread(this);
 		rfbThread.start();
