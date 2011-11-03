@@ -57,6 +57,10 @@ dojo.ready(function(){
   dojo.query('#startButton').onclick(function(){
     vnc.start('applets', getArgs());
   });
+
+  dojo.subscribe(vnc.CONNECTION_ERROR, function(o){
+    alert(o.msg);
+  });
 });
     </script>
   </body>

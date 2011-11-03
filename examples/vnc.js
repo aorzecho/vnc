@@ -19,6 +19,7 @@ dojo.require("dojo.string");
      }
 
      function start(node, args){
+         node = dojo.byId(node);
          console.log('vnc::start', node, args);
          var id = uid();
          dojo.publish(vnc.INJECT);
@@ -26,13 +27,13 @@ dojo.require("dojo.string");
          $.applet.inject(node, {
                 archive: (args.archive || 'vnc.jar') + '?v=' + new Date().getTime(),
                 id: id,
-                code:"com.tigervnc.VncLiveConnectApplet",
+                code:'com.tigervnc.VncLiveConnectApplet',
                 port: args.port,
                 host: args.host,
                 title: args.title,
                 show_controls: 'no',             
-                new_window: "Yes",
-                log_level: "info",
+                new_window: 'Yes',
+                log_level: 'debug',
                 callback: 'vnc.javatrigger'
             });
 
