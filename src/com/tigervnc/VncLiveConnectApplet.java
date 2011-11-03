@@ -13,18 +13,37 @@ public class VncLiveConnectApplet extends Applet2 {
 	private String host;
 	private String log_level;
 	private String show_controls;
+	private String id;
 
 	@Override
 	public void init() {
-		logger.info("destroy");
 		super.init();
 		port = getRequiredParameter("port");
 		host = getRequiredParameter("host");
+		id = getRequiredParameter("id");
 		window_title = getParameter("title", "Remote Desktop Viewer");
 		log_level = getParameter("log_level", "info");
 		show_controls = getParameter("show_controls", "no");
+		
+		subscribe_to_vnc_events();
+		
 		startVNC();
-		publishEvent(Event.INIT);
+		publishEvent(VncEvent.INIT, id);
+	}
+	
+	private void subscribe_to_vnc_events(){
+		VncEventPublisher.subscribe(new VncEventSubscriber(){
+			
+			@Override
+			public void connectionError(String msg, Exception e){
+				publishEvent(VncEvent.CONNECTION_ERROR, id, msg);
+			}
+			
+			@Override
+			public void destroy(String msg){
+				publishEvent(VncEvent.DESTROY, id, msg);
+			}
+		});
 	}
 	
 	@Override
@@ -35,8 +54,6 @@ public class VncLiveConnectApplet extends Applet2 {
 	}
 
 	public void startVNC() {
-		logger.info("startVNC");
-		
 		VncViewer.main(new String[] { 
 				"host", host, 
 				"port", port,
@@ -74,5 +91,4 @@ public class VncLiveConnectApplet extends Applet2 {
 			return name;
 		}
 	}
-
 }

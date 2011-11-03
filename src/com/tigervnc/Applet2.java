@@ -7,25 +7,22 @@ public class Applet2 extends java.applet.Applet{
 	private String callback;
 	
 	public void init(){
+		System.out.println("INIT");
 		js = JSObject.getWindow(this);
 		callback = getRequiredParameter("callback");
 	}
 	
 	protected String getParameter(String name, String default_value){
-		try{
-			return getParameter(name);
-		}
-		catch(NullPointerException e){
+		String value = getParameter(name);
+		if(value == null){
 			return default_value;
 		}
+		return value;
 	}
 
 	protected String getRequiredParameter(String name){
-		String value = null;
-		try{
-			value = getParameter(name);
-		}
-		catch(NullPointerException e){
+		String value = getParameter(name);
+		if(value == null){
 			throw new RuntimeException("Missing required parameter: " + name);
 		}
 		return value;

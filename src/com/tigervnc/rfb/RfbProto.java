@@ -141,10 +141,8 @@ public class RfbProto {
 				Class factoryClass = Class.forName(viewer.socketFactory);
 				SocketFactory factory = (SocketFactory) factoryClass
 						.newInstance();
-				if (viewer.inAnApplet)
-					sock = factory.createSocket(host, port, viewer);
-				else
-					sock = factory.createSocket(host, port, viewer.mainArgs);
+				
+				sock = factory.createSocket(host, port, viewer.mainArgs);
 			} catch (Exception e) {
 				e.printStackTrace();
 				throw new IOException(e.getMessage());

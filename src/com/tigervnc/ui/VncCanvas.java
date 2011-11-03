@@ -47,6 +47,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
 import com.tigervnc.RecordOutputStream;
 import com.tigervnc.Util;
 import com.tigervnc.VncViewer;
@@ -72,6 +74,8 @@ import com.tigervnc.rfb.message.KeyboardEvent.KeyUndefinedException;
 public class VncCanvas extends Canvas implements KeyListener, MouseListener,
 		MouseMotionListener, Repaintable, Runnable {
 
+	static Logger logger = Logger.getLogger(VncCanvas.class);
+	
 	VncViewer viewer;
 	RfbProto rfb;
 	ColorModel cm8, cm24;
@@ -192,10 +196,7 @@ public class VncCanvas extends Canvas implements KeyListener, MouseListener,
 
 		setPixelFormat();
 		resetSelection();
-
-		inputEnabled = false;
-		if (!viewer.options.viewOnly)
-			enableInput(true);
+		enableInput(true);
 
 		// Enable mouse and keyboard event listeners.
 		setFocusTraversalKeysEnabled(false); // enables tab key events
@@ -279,15 +280,11 @@ public class VncCanvas extends Canvas implements KeyListener, MouseListener,
 	public synchronized void enableInput(boolean enable) {
 		if (enable && !inputEnabled) {
 			inputEnabled = true;
-			if (viewer.showControls) {
-				viewer.buttonPanel.enableRemoteAccessControls(true);
-			}
+			
 			createSoftCursor(); // scaled cursor
 		} else if (!enable && inputEnabled) {
 			inputEnabled = false;
-			if (viewer.showControls) {
-				viewer.buttonPanel.enableRemoteAccessControls(false);
-			}
+			
 			createSoftCursor(); // non-scaled cursor
 		}
 	}
@@ -315,38 +312,6 @@ public class VncCanvas extends Canvas implements KeyListener, MouseListener,
 		// Useful shortcuts.
 		int fbWidth = rfb.server.fb_width;
 		int fbHeight = rfb.server.fb_height;
-
-		// FIXME: This part of code must be in VncViewer i think
-		if (viewer.options.autoScale) {
-			if (viewer.inAnApplet) {
-				maxWidth = viewer.getWidth();
-				maxHeight = viewer.getHeight();
-			} else {
-				if (viewer.vncFrame != null) {
-					if (isFirstSizeAutoUpdate) {
-						isFirstSizeAutoUpdate = false;
-						Dimension screenSize = viewer.vncFrame.getToolkit()
-								.getScreenSize();
-						maxWidth = (int) screenSize.getWidth() - 100;
-						maxHeight = (int) screenSize.getHeight() - 100;
-						viewer.vncFrame.setSize(maxWidth, maxHeight);
-					} else {
-						viewer.desktopScrollPane.doLayout();
-						maxWidth = viewer.desktopScrollPane.getWidth();
-						maxHeight = viewer.desktopScrollPane.getHeight();
-					}
-				} else {
-					maxWidth = fbWidth;
-					maxHeight = fbHeight;
-				}
-			}
-			int f1 = maxWidth * 100 / fbWidth;
-			int f2 = maxHeight * 100 / fbHeight;
-			scalingFactor = Math.min(f1, f2);
-			if (scalingFactor > 100)
-				scalingFactor = 100;
-			System.out.println("Scaling desktop at " + scalingFactor + "%");
-		}
 
 		// Update scaled framebuffer geometry.
 		scaledWidth = (fbWidth * scalingFactor + 50) / 100;
@@ -394,67 +359,19 @@ public class VncCanvas extends Canvas implements KeyListener, MouseListener,
 
 		// FIXME: This part of code must be in VncViewer i think
 		// Update the size of desktop containers.
-		if (viewer.inSeparateFrame) {
-			if (viewer.desktopScrollPane != null) {
-				if (!viewer.options.autoScale) {
-					resizeDesktopFrame();
-				} else {
-					setSize(scaledWidth, scaledHeight);
-					viewer.desktopScrollPane.setSize(maxWidth + 200,
-							maxHeight + 200);
-				}
-			}
-		} else {
-			setSize(scaledWidth, scaledHeight);
-		}
+		resizeDesktopFrame();
+
 		viewer.moveFocusToDesktop();
 	}
 
 	public void resizeDesktopFrame() {
-		System.err.println("resizeDesktopFrame VncCanvas, width: " + scaledWidth + ", scaledHeight: " + scaledHeight);
-		setSize(scaledWidth, scaledHeight);
+		logger.info("resizeDesktopFrame VncCanvas, width: " + scaledWidth + ", scaledHeight: " + scaledHeight);
 
-		// FIXME: Find a better way to determine correct size of a
-		// ScrollPane. -- const
-		Insets insets = viewer.desktopScrollPane.getInsets();
-		viewer.desktopScrollPane.setSize(scaledWidth + 2
-				* Math.min(insets.left, insets.right), scaledHeight + 2
-				* Math.min(insets.top, insets.bottom));
-
-		viewer.vncFrame.pack();
-
-		// Try to limit the frame size to the screen size.
-
-		Dimension screenSize = viewer.vncFrame.getToolkit().getScreenSize();
-		Dimension frameSize = viewer.vncFrame.getSize();
-		Dimension newSize = frameSize;
-
-		System.err.println("screenSize:" + screenSize + " frameSize: " + frameSize + " newSize:" + newSize);
+		// update size of canvas
+		viewer.canvasPanel.setSize(scaledWidth, scaledHeight);
 		
-		// Reduce Screen Size by 30 pixels in each direction;
-		// This is a (poor) attempt to account for
-		// 1) Menu bar on Macintosh (should really also account for
-		// Dock on OSX). Usually 22px on top of screen.
-		// 2) Taxkbar on Windows (usually about 28 px on bottom)
-		// 3) Other obstructions.
-
-		screenSize.height -= 30;
-		screenSize.width -= 30;
-
-		boolean needToResizeFrame = false;
-		if (frameSize.height > screenSize.height) {
-			newSize.height = screenSize.height;
-			needToResizeFrame = true;
-		}
-		if (frameSize.width > screenSize.width) {
-			newSize.width = screenSize.width;
-			needToResizeFrame = true;
-		}
-		if (needToResizeFrame) {
-			viewer.vncFrame.setSize(newSize);
-		}
-
-		viewer.desktopScrollPane.doLayout();
+		// if size changed resize frame
+		viewer.vncFrame.pack();
 	}
 
 	//
@@ -463,13 +380,7 @@ public class VncCanvas extends Canvas implements KeyListener, MouseListener,
 	//
 
 	public void processNormalProtocol() throws Exception {
-
-	
 		try {
-			// Start/stop session recording if necessary.
-			viewer.checkRecordingStatus();
-
-			
 			rfb.writeFramebufferUpdateRequest(0, 0, rfb.server.fb_width,
 					rfb.server.fb_height, false);
 
@@ -599,11 +510,6 @@ public class VncCanvas extends Canvas implements KeyListener, MouseListener,
 
 					boolean fullUpdateNeeded = false;
 
-					// Start/stop session recording if necessary. Request full
-					// update if a new session file was opened.
-					if (viewer.checkRecordingStatus())
-						fullUpdateNeeded = true;
-
 					// Defer framebuffer update request if necessary. But wake up
 					// immediately on keyboard or mouse event. Also, don't sleep
 					// if there is some data to receive, or if the last update
@@ -669,8 +575,8 @@ public class VncCanvas extends Canvas implements KeyListener, MouseListener,
 					break;
 
 				case Encodings.ServerCutText:
-					String s = rfb.readServerCutText();
-					viewer.clipboard.setCutText(s);
+					rfb.readServerCutText();
+					//viewer.clipboard.setCutText(s);
 					break;
 
 				case Encodings.EndOfContinuousUpdates:

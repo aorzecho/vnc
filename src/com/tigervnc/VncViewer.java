@@ -30,7 +30,6 @@ package com.tigervnc;
 import java.applet.Applet;
 import java.awt.BorderLayout;
 import java.awt.Container;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -38,7 +37,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridLayout;
 import java.awt.Label;
 import java.awt.Panel;
-import java.awt.ScrollPane;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.WindowEvent;
@@ -51,7 +49,6 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JApplet;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
@@ -62,21 +59,17 @@ import org.apache.log4j.Logger;
 import com.tigervnc.rfb.Encodings;
 import com.tigervnc.rfb.RfbProto;
 import com.tigervnc.ui.AuthPanel;
-import com.tigervnc.ui.ButtonPanel;
-import com.tigervnc.ui.ClipboardFrame;
 import com.tigervnc.ui.OptionsFrame;
-import com.tigervnc.ui.RecordingFrame;
 import com.tigervnc.ui.ReloginPanel;
 import com.tigervnc.ui.VncCanvas;
 
-public class VncViewer extends JApplet implements java.lang.Runnable,
+public class VncViewer implements java.lang.Runnable,
 		WindowListener, ComponentListener {
 
-	protected static Logger logger = Logger.getLogger(VncViewer.class);
+	public static Logger logger = Logger.getLogger(VncViewer.class);
 	static{
-		logger.setLevel(Level.ERROR);
+		logger.setLevel(Level.INFO);
 	}
-	
 	public static boolean inAnApplet = true;
 	public static boolean inSeparateFrame = false;
 	public static Applet applet;
@@ -87,37 +80,22 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	//
 
 	public static void main(String[] argv) {
-		System.out.println("main 10");
 		VncViewer v = new VncViewer();
 		v.mainArgs = argv;
-		VncViewer.inAnApplet = false;
-		VncViewer.inSeparateFrame = true;
-
-		v.init();
-		v.start();
 	}
 
 	public String[] mainArgs;
-
 	public RfbProto rfb;
+	
 	Thread rfbThread;
 
 	public JFrame vncFrame;
 	public Container vncContainer;
-	public ScrollPane desktopScrollPane;
-	public ButtonPanel buttonPanel;
 	public JLabel connStatusLabel;
 	public VncCanvas vncCanvas;
+	public Panel canvasPanel = new Panel();
 	public OptionsFrame options;
 
-	public ClipboardFrame clipboard;
-	public RecordingFrame rec;
-
-	// Control session recording.
-	Object recordingSync;
-	String sessionFileName;
-	boolean recordingActive;
-	boolean recordingStatusChanged;
 	String cursorUpdatesDef;
 	String eightBitColorsDef;
 
@@ -137,42 +115,25 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	public int debugStatsExcludeUpdates;
 	public int debugStatsMeasureUpdates;
 
-	// Reference to this applet for inter-applet communication.
-	// public static java.applet.Applet refApplet;
 
-	//
-	// init()
-	//
-
-	public void init() {
+	public VncViewer(String[] argv) {
 		BasicConfigurator.configure();
+		mainArgs = argv;
 		
 		readParameters();
 		setLogLevel(log_level);
 
-		if (inSeparateFrame) {
-			vncFrame = new JFrame("TigerVNC");
-			vncFrame.setResizable(false);
-			vncContainer = vncFrame;
-		} else {
-			vncContainer = this;
-		}
-		
-		recordingSync = new Object();
+		vncFrame = new JFrame("TigerVNC");
+		vncFrame.setResizable(false);
+		vncContainer = vncFrame;
 
 		options = new OptionsFrame(this);
-		clipboard = new ClipboardFrame(this);
-		if (RecordingFrame.checkSecurity())
-			rec = new RecordingFrame(this);
-
-		sessionFileName = null;
-		recordingActive = false;
-		recordingStatusChanged = false;
+		
 		cursorUpdatesDef = null;
 		eightBitColorsDef = null;
 
+
 		if (inSeparateFrame) {
-			System.out.println("adding window listener");
 			vncFrame.addWindowListener(this);
 			vncFrame.addComponentListener(this);
 		}
@@ -181,83 +142,33 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 		rfbThread.start();
 	}
 
-	public void update(Graphics g) {
-	}
+	public void update(Graphics g) {}
 
 	//
 	// run() - executed by the rfbThread to deal with the RFB socket.
 	//
-
 	public void run() {
-		
-		if (showControls) {
-			buttonPanel = new ButtonPanel(this);
-			connStatusLabel = new JLabel("Status: initializing ...");
-			vncContainer.add(buttonPanel, BorderLayout.NORTH);
-			vncContainer.add(connStatusLabel, BorderLayout.SOUTH);
-		}
 
 		try {
 			connectAndAuthenticate();
 			doProtocolInitialisation();
+			createCanvas(0, 0);
 
-			if (showControls) {
-				if (rfb.clientMsgCaps
-						.isEnabled(Encodings.VideoRectangleSelection)) {
-					buttonPanel.addSelectButton();
-				}
-				if (rfb.clientMsgCaps.isEnabled(Encodings.VideoFreeze)) {
-					buttonPanel.addVideoFreezeButton();
-				}
+			// Create a panel which itself is resizeable and can hold
+			// non-resizeable VncCanvas component at the top left corner.
+			canvasPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
+			canvasPanel.add(vncCanvas);
+
+			// If auto scale is not enabled we don't need to set first frame
+			// size to fullscreen
+			if (!options.autoScale) {
+				vncCanvas.isFirstSizeAutoUpdate = false;
 			}
 
-			// // FIXME: Use auto-scaling not only in a separate frame.
-			if (options.autoScale && inSeparateFrame) {
-				Dimension screenSize;
-				try {
-					screenSize = vncContainer.getToolkit().getScreenSize();
-				} catch (Exception e) {
-					screenSize = new Dimension(0, 0);
-				}
-				createCanvas(screenSize.width - 32, screenSize.height - 32);
-			} else {
-				createCanvas(0, 0);
-			}
-
-			if (inSeparateFrame) {
-				// Create a panel which itself is resizeable and can hold
-				// non-resizeable VncCanvas component at the top left corner.
-				Panel canvasPanel = new Panel();
-				canvasPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
-				canvasPanel.add(vncCanvas);
-
-				// Create a ScrollPane which will hold a panel with VncCanvas
-				// inside.
-				desktopScrollPane = new ScrollPane(
-						ScrollPane.SCROLLBARS_AS_NEEDED);
-
-				desktopScrollPane.add(canvasPanel);
-				// If auto scale is not enabled we don't need to set first frame
-				// size to fullscreen
-				if (!options.autoScale) {
-					vncCanvas.isFirstSizeAutoUpdate = false;
-				}
-
-				// Finally, add our ScrollPane to the Frame window.
-				vncFrame.add(desktopScrollPane, BorderLayout.CENTER);
-				vncFrame.setTitle(windowTitle);
-				vncFrame.pack();
-				vncCanvas.resizeDesktopFrame();
-
-			} else {
-				// Just add the VncCanvas component to the Applet.
-				add(vncCanvas);
-				validate();
-			}
-
-			if (showControls) {
-				buttonPanel.enableButtons();
-			}
+			// Finally, add our panel to the Frame window.
+			vncFrame.add(canvasPanel);
+			vncFrame.setTitle(windowTitle);
+			vncFrame.pack();
 
 			moveFocusToDesktop();
 			processNormalProtocol();
@@ -267,8 +178,9 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 		} catch (UnknownHostException e) {
 			fatalError("Network error: server name unknown: " + host, e);
 		} catch (ConnectException e) {
-			fatalError("Network error: could not connect to server: " + host
-					+ ":" + port, e);
+			String msg = "Network error: could not connect to server: " + host+ ":" + port;
+			VncEventPublisher.publish(VncEvent.CONNECTION_ERROR, msg, e);
+
 		} catch (EOFException e) {
 			if (showOfflineDesktop) {
 				e.printStackTrace();
@@ -277,19 +189,10 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 				if (vncCanvas != null) {
 					vncCanvas.enableInput(false);
 				}
-				if (inSeparateFrame) {
-					vncFrame.setTitle(windowTitle + " [disconnected]");
-				}
+				vncFrame.setTitle(windowTitle + " [disconnected]");
+				
 				if (rfb != null && !rfb.closed())
 					rfb.close();
-				if (showControls && buttonPanel != null) {
-					buttonPanel.disableButtonsOnDisconnect();
-					if (inSeparateFrame) {
-						vncFrame.pack();
-					} else {
-						validate();
-					}
-				}
 			} else {
 				fatalError("Network error: remote side closed connection", e);
 			}
@@ -314,7 +217,6 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	//
 	// Create a VncCanvas instance.
 	//
-
 	void createCanvas(int maxWidth, int maxHeight) throws IOException {
 		// Determine if Java 2D API is available and use a special
 		// version of VncCanvas if it is present.
@@ -363,12 +265,9 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 
 	void connectAndAuthenticate() throws Exception {
 		showConnectionStatus("Initializing...");
-		if (inSeparateFrame) {
-			vncFrame.pack();
-			vncFrame.show();
-		} else {
-			validate();
-		}
+		
+        vncFrame.pack();
+        vncFrame.show();
 
 		showConnectionStatus("Connecting to " + host + ", port " + port + "...");
 
@@ -417,10 +316,7 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 	//
 
 	void showConnectionStatus(String msg) {
-		if (!showControls || msg == null) {
-			return;
-		}
-		connStatusLabel.setText("Status: " + msg);
+		return;
 	}
 
 	//
@@ -471,15 +367,10 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 		gbc.weighty = 1.0;
 		gbc.ipadx = 100;
 		gbc.ipady = 50;
-		// gridbag.setConstraints(authPanel, gbc);
+
 		vncContainer.add(authPanel);
-
-		if (inSeparateFrame) {
-			vncFrame.pack();
-		} else {
-			validate();
-		}
-
+		vncFrame.pack();
+		
 		authPanel.moveFocusToDefaultField();
 		String pw = authPanel.getPassword();
 		vncContainer.remove(authPanel);
@@ -506,12 +397,8 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 
 		AuthPanel authPanel = new AuthPanel(this, false);
 		vncContainer.add(authPanel);
-
-		if (inSeparateFrame) {
-			vncFrame.pack();
-		} else {
-			validate();
-		}
+		
+        vncFrame.pack();
 
 		authPanel.moveFocusToDefaultField();
 		String pw = authPanel.getPassword();
@@ -656,91 +543,6 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 		}
 	}
 
-	//
-	// Order change in session recording status. To stop recording, pass
-	// null in place of the fname argument.
-	//
-
-	public void setRecordingStatus(String fname) {
-		synchronized (recordingSync) {
-			sessionFileName = fname;
-			recordingStatusChanged = true;
-		}
-	}
-
-	//
-	// Start or stop session recording. Returns true if this method call
-	// causes recording of a new session.
-	//
-
-	public boolean checkRecordingStatus() throws IOException {
-		synchronized (recordingSync) {
-			if (recordingStatusChanged) {
-				recordingStatusChanged = false;
-				if (sessionFileName != null) {
-					startRecording();
-					return true;
-				} else {
-					stopRecording();
-				}
-			}
-		}
-		return false;
-	}
-
-	//
-	// Start session recording.
-	//
-
-	protected void startRecording() throws IOException {
-		synchronized (recordingSync) {
-			if (!recordingActive) {
-				// Save settings to restore them after recording the session.
-				cursorUpdatesDef = options.choices[options.cursorUpdatesIndex]
-						.getSelectedItem();
-				eightBitColorsDef = options.choices[options.eightBitColorsIndex]
-						.getSelectedItem();
-				// Set options to values suitable for recording.
-				options.choices[options.cursorUpdatesIndex].select("Disable");
-				options.choices[options.cursorUpdatesIndex].setEnabled(false);
-				options.setEncodings();
-				options.choices[options.eightBitColorsIndex].select("No");
-				options.choices[options.eightBitColorsIndex].setEnabled(false);
-				options.setColorFormat();
-			} else {
-				rfb.closeSession();
-			}
-
-			logger.info("Recording the session in " + sessionFileName);
-			rfb.startSession(sessionFileName);
-			recordingActive = true;
-		}
-	}
-
-	//
-	// Stop session recording.
-	//
-
-	protected void stopRecording() throws IOException {
-		synchronized (recordingSync) {
-			if (recordingActive) {
-				// Restore options.
-				options.choices[options.cursorUpdatesIndex]
-						.select(cursorUpdatesDef);
-				options.choices[options.cursorUpdatesIndex].setEnabled(true);
-				options.setEncodings();
-				options.choices[options.eightBitColorsIndex]
-						.select(eightBitColorsDef);
-				options.choices[options.eightBitColorsIndex].setEnabled(true);
-				options.setColorFormat();
-
-				rfb.closeSession();
-				logger.info("Session recording stopped.");
-			}
-			sessionFileName = null;
-			recordingActive = false;
-		}
-	}
 
 	//
 	// readParameters() - read parameters from the html source or from the
@@ -796,11 +598,6 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 		}
 
 		String str;
-		if (inAnApplet) {
-			str = readParameter("new_window", false);
-			if (str != null && str.equalsIgnoreCase("Yes"))
-				inSeparateFrame = true;
-		}
 
 		// "Show Controls" set to "No" disables button panel.
 		showControls = true;
@@ -866,13 +663,6 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 
 	public String readParameter(String name, boolean required) {
 		logger.info("read parameter " + name);
-		if (inAnApplet) {
-			String s = getParameter(name);
-			if ((s == null) && required) {
-				fatalError(name + " parameter not specified");
-			}
-			return s;
-		}
 
 		for (int i = 0; i < mainArgs.length; i += 2) {
 			if (mainArgs[i].equalsIgnoreCase(name)) {
@@ -956,11 +746,9 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 		if (rfb != null && !rfb.closed())
 			rfb.close();
 		options.dispose();
-		clipboard.dispose();
-		if (rec != null)
-			rec.dispose();
 
 		if (inAnApplet) {
+			VncEventPublisher.publish(VncEvent.DESTROY, "destroyed");
 			showMessage("Disconnected");
 		} else {
 			System.exit(0);
@@ -1029,17 +817,11 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 			gridPanel.add(new ReloginPanel(this));
 
 		} else {
-
 			vncContainer.setLayout(new FlowLayout(FlowLayout.LEFT, 30, 30));
 			vncContainer.add(errLabel);
-
 		}
-
-		if (inSeparateFrame) {
-			vncFrame.pack();
-		} else {
-			validate();
-		}
+        vncFrame.pack();
+		
 	}
 
 	//
@@ -1062,13 +844,10 @@ public class VncViewer extends JApplet implements java.lang.Runnable,
 
 		vncContainer.removeAll();
 		options.dispose();
-		clipboard.dispose();
-		if (rec != null)
-			rec.dispose();
+
 		if (rfb != null && !rfb.closed())
 			rfb.close();
-		if (inSeparateFrame)
-			vncFrame.dispose();
+		vncFrame.dispose();
 	}
 
 	//
