@@ -28,7 +28,6 @@
 package com.tigervnc;
 
 import java.applet.Applet;
-import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -80,8 +79,7 @@ public class VncViewer implements java.lang.Runnable,
 	//
 
 	public static void main(String[] argv) {
-		VncViewer v = new VncViewer();
-		v.mainArgs = argv;
+		VncViewer v = new VncViewer(argv);
 	}
 
 	public String[] mainArgs;
