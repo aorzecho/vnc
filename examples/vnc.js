@@ -27,7 +27,7 @@ dojo.require("dojo.string");
          $.applet.inject(node, {
                 archive: (args.archive || 'vnc.jar') + '?v=' + new Date().getTime(),
                 id: id,
-                code:'com.tigervnc.VncLiveConnectApplet',
+                code:'com.tigervnc.VncApplet',
                 port: args.port,
                 host: args.host,
                 title: args.title,

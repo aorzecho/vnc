@@ -174,7 +174,7 @@ public class VncViewer implements java.lang.Runnable,
 		} catch (ConnectException e) {
 			String msg = "Network error: could not connect to server: " + host+ ":" + port;
 			VncEventPublisher.publish(VncEvent.CONNECTION_ERROR, msg, e);
-
+			destroy();
 		} catch (EOFException e) {
 			if (showOfflineDesktop) {
 				e.printStackTrace();
@@ -783,6 +783,7 @@ public class VncViewer implements java.lang.Runnable,
 
 		if (inAnApplet) {
 			showMessage(str);
+			destroy();
 		} else {
 			System.exit(1);
 		}
@@ -911,7 +912,9 @@ public class VncViewer implements java.lang.Runnable,
 	public void windowDeactivated(WindowEvent evt) {
 		logger.info("windowDeactived");
 		try {
-			rfb.releaseAllKeys();
+			if(rfb != null){
+				rfb.releaseAllKeys();
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
