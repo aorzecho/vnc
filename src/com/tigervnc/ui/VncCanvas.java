@@ -39,6 +39,8 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.image.ColorModel;
 import java.awt.image.DirectColorModel;
 import java.awt.image.MemoryImageSource;
@@ -71,7 +73,7 @@ import com.tigervnc.rfb.message.KeyboardEvent.KeyUndefinedException;
 // VncCanvas is a subclass of Canvas which draws a VNC desktop on it.
 //
 
-public class VncCanvas extends Canvas implements KeyListener, MouseListener,
+public class VncCanvas extends Canvas implements KeyListener, MouseListener, MouseWheelListener,
 		MouseMotionListener, Repaintable, Runnable {
 
 	static Logger logger = Logger.getLogger(VncCanvas.class);
@@ -203,6 +205,7 @@ public class VncCanvas extends Canvas implements KeyListener, MouseListener,
 		addKeyListener(this);
 		addMouseListener(this);
 		addMouseMotionListener(this);
+		addMouseWheelListener(this);
 
 		// Create thread, that will send mouse movement events
 		// to VNC server.
@@ -749,6 +752,11 @@ public class VncCanvas extends Canvas implements KeyListener, MouseListener,
 			}
 		}
 		evt.consume();
+	}
+	
+	public void mouseWheelMoved(MouseWheelEvent e) {
+		processLocalMouseEvent(e, false);
+		
 	}
 	
 	public void mousePressed(MouseEvent evt) {

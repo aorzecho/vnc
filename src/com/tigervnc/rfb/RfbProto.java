@@ -27,7 +27,6 @@
 package com.tigervnc.rfb;
 
 import java.awt.Rectangle;
-import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.io.BufferedInputStream;
@@ -44,6 +43,7 @@ import com.tigervnc.rfb.message.Authentication;
 import com.tigervnc.rfb.message.ClientCutText;
 import com.tigervnc.rfb.message.FramebufferUpdateRequest;
 import com.tigervnc.rfb.message.KeyboardEvent;
+import com.tigervnc.rfb.message.PointerEvent;
 import com.tigervnc.rfb.message.ServerInit;
 import com.tigervnc.rfb.message.SetColorMapEntries;
 import com.tigervnc.rfb.message.SetEncodings;
@@ -319,66 +319,7 @@ public class RfbProto {
 	}
 	
 	public void writePointerEvent(MouseEvent evt) throws IOException {
-		// TODO: move into pointer event
-		int modifiers = evt.getModifiers();
-
-		int mask2 = 2;
-		int mask3 = 4;
-		if (viewer.options.reverseMouseButtons2And3) {
-			mask2 = 4;
-			mask3 = 2;
-		}
-
-		// Note: For some reason, AWT does not set BUTTON1_MASK on left
-		// button presses. Here we think that it was the left button if
-		// modifiers do not include BUTTON2_MASK or BUTTON3_MASK.
-
-		if (evt.getID() == MouseEvent.MOUSE_PRESSED) {
-			if ((modifiers & InputEvent.BUTTON2_MASK) != 0) {
-				pointerMask = mask2;
-				modifiers &= ~ALT_MASK;
-			} else if ((modifiers & InputEvent.BUTTON3_MASK) != 0) {
-				pointerMask = mask3;
-				modifiers &= ~META_MASK;
-			} else {
-				pointerMask = 1;
-			}
-		} else if (evt.getID() == MouseEvent.MOUSE_RELEASED) {
-			pointerMask = 0;
-			if ((modifiers & InputEvent.BUTTON2_MASK) != 0) {
-				modifiers &= ~ALT_MASK;
-			} else if ((modifiers & InputEvent.BUTTON3_MASK) != 0) {
-				modifiers &= ~META_MASK;
-			}
-		}
-
-		eventBufLen = 0;
-		//writeModifierKeyEvents(modifiers);
-
-		int x = evt.getX();
-		int y = evt.getY();
-
-		if (x < 0)
-			x = 0;
-		if (y < 0)
-			y = 0;
-
-		eventBuf[eventBufLen++] = (byte) Encodings.POINTER_EVENT;
-		eventBuf[eventBufLen++] = (byte) pointerMask;
-		eventBuf[eventBufLen++] = (byte) ((x >> 8) & 0xff);
-		eventBuf[eventBufLen++] = (byte) (x & 0xff);
-		eventBuf[eventBufLen++] = (byte) ((y >> 8) & 0xff);
-		eventBuf[eventBufLen++] = (byte) (y & 0xff);
-
-		//
-		// Always release all modifiers after an "up" event
-		//
-
-		if (pointerMask == 0) {
-			//writeModifierKeyEvents(0);
-		}
-
-		os.write(eventBuf, 0, eventBufLen);
+		os.write(new PointerEvent(evt).getBytes());
 	}
 
 	//
@@ -813,19 +754,11 @@ public class RfbProto {
 	byte[] eventBuf = new byte[72];
 	int eventBufLen;
 
-	// Useful shortcuts for modifier masks.
-
-	final static int CTRL_MASK = InputEvent.CTRL_MASK;
-	final static int SHIFT_MASK = InputEvent.SHIFT_MASK;
-	final static int META_MASK = InputEvent.META_MASK;
-	final static int ALT_MASK = InputEvent.ALT_MASK;
-
 	//
 	// Write a pointer event message. We may need to send modifier key events
 	// around it to set the correct modifier state.
 	//
 
-	int pointerMask = 0;
 
 	//
 	// Enable continuous updates for the specified area of the screen (but

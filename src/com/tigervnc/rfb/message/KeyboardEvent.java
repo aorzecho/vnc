@@ -196,19 +196,12 @@ public class KeyboardEvent implements IServerMessage {
 		}
 	}
 
-	protected byte[] concat(byte[] a, byte[] b) {
-		byte[] c = new byte[a.length + b.length];
-		System.arraycopy(a, 0, c, 0, a.length);
-		System.arraycopy(b, 0, c, a.length, b.length);
-		return c;
-	}
-
 	protected byte[] getKeyEvent() {
 		byte[] events = new byte[0];
 		if (_extra_preceding_events != null) {
 			for (KeyboardEvent e : _extra_preceding_events) {
 				logger.debug("extra " + e);
-				events = concat(events, e.getBytes());
+				events = Util.concat(events, e.getBytes());
 			}
 		}
 		
@@ -224,7 +217,7 @@ public class KeyboardEvent implements IServerMessage {
 			ev = getSimpleKeyEvent();
 		}
 
-		return concat(events, ev);
+		return Util.concat(events, ev);
 	}
 
 	protected byte[] getExtendedKeyEvent() {
