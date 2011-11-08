@@ -125,13 +125,14 @@ public class VncViewer implements java.lang.Runnable,
 		vncContainer = vncFrame;
 
 		options = new OptionsFrame(this);
-		
-		cursorUpdatesDef = null;
-		eightBitColorsDef = null;
+
+		if(showControls){
+			options.setVisible(true);
+		}
 
 		vncFrame.addWindowListener(this);
 		vncFrame.addComponentListener(this);
-
+		
 		rfbThread = new Thread(this);
 		rfbThread.start();
 	}
@@ -596,7 +597,6 @@ public class VncViewer implements java.lang.Runnable,
 		// "Show Controls" set to "No" disables button panel.
 		showControls = true;
 		str = readParameter("show_controls", false);
-		System.out.println("str:" + str);
 		if (str != null && str.equalsIgnoreCase("No"))
 			showControls = false;
 
