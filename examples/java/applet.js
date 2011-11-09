@@ -6,6 +6,9 @@
  *
  */
 
+// support for dojo module loading.
+if(typeof dojo !== 'undefined'){ dojo.provide('java.applet'); }
+
 (function($){
 
    // note: navigator.mimeTypes in safari only includes 'application/x-java-applet
@@ -98,7 +101,7 @@
     plugin: hasPlugin(),
     hasVersion: hasVersion,
     version: version,
-    java_url: java_url,
+    javaUrl: java_url,
 
     inject: function(node, args){
 

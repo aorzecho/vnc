@@ -1,5 +1,7 @@
-dojo.require("dojo.string");
+dojo.require('dojo.string');
+dojo.require('java.applet');
 
+dojo.provide('vnc');
 (function($, d){
 
      function uid(){

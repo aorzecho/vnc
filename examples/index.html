@@ -2,8 +2,6 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-
     <title>VNC Example</title>
     <meta name="description" content="VNC display example">
     <meta name="author" content="Jakob A. Dam">
@@ -18,6 +16,13 @@ form {
   margin: 5px 10px 0px 0px;
 }
     </style>
+    <script>
+        djConfig = {
+          baseUrl: "/d/",
+          debugAtAllCosts: true
+        };
+    </script>
+    <script src="//static.irigo.com/dojo/1.6.1/dojo/dojo.xd.js"></script>
   </head>
   <body>
     <nav></nav>
@@ -31,18 +36,13 @@ form {
         <option value="no">no</option>
         <option value="yes">yes</option>
       </select>
+      <input type="submit" id="startButton" value="Start VNC"></input>
     </form>
-    <button id="startButton">Start VNC</button>
 
     <div id="applets"></div>
 
-    <footer></footer> 
-
-    <script src="//ajax.googleapis.com/ajax/libs/dojo/1.5/dojo/dojo.xd.js"></script>
-    <script src="/applet.js"></script>
-    <script src="/vnc.js"></script>
-    
   <script>
+dojo.require('vnc');
 dojo.ready(function(){
 
   function getArgs(){
@@ -54,8 +54,9 @@ dojo.ready(function(){
     };
   }
 
-  dojo.query('#startButton').onclick(function(){
+  dojo.query('form').onsubmit(function(e){
     vnc.start('applets', getArgs());
+    e.preventDefault();
   });
 
   dojo.subscribe(vnc.CONNECTION_ERROR, function(o){
