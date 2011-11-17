@@ -73,7 +73,7 @@ import com.tigervnc.rfb.message.KeyboardEvent.KeyUndefinedException;
 // VncCanvas is a subclass of Canvas which draws a VNC desktop on it.
 //
 
-public class VncCanvas extends Canvas implements KeyListener, MouseListener, MouseWheelListener,
+public class VncCanvas extends Canvas implements MouseListener, MouseWheelListener,
 		MouseMotionListener, Repaintable, Runnable {
 
 	static Logger logger = Logger.getLogger(VncCanvas.class);
@@ -202,7 +202,7 @@ public class VncCanvas extends Canvas implements KeyListener, MouseListener, Mou
 
 		// Enable mouse and keyboard event listeners.
 		setFocusTraversalKeysEnabled(false); // enables tab key events
-		addKeyListener(this);
+		addKeyListener(new CanvasKeyListener(this));
 		addMouseListener(this);
 		addMouseMotionListener(this);
 		addMouseWheelListener(this);
@@ -712,47 +712,11 @@ public class VncCanvas extends Canvas implements KeyListener, MouseListener, Mou
 		}
 	}
 
-	//
-	// Handle events.
-	//
+	
 
-	public void keyPressed(KeyEvent evt) {
-		processLocalKeyEvent(evt);
-	}
+	
 
-	public void keyReleased(KeyEvent evt) {
-		processLocalKeyEvent(evt);
-	}
-
-	private static final Map<Character, Integer> char2vk = new HashMap<Character, Integer>();
-	static {
-		char2vk.put('æ', KeyEvent.VK_SEMICOLON);
-		char2vk.put('ø', KeyEvent.VK_QUOTE);
-		char2vk.put('å', KeyEvent.VK_OPEN_BRACKET);
-		char2vk.put('Æ', KeyEvent.VK_SEMICOLON);
-		char2vk.put('Ø', KeyEvent.VK_QUOTE);
-		char2vk.put('Å', KeyEvent.VK_OPEN_BRACKET);
-	}
-
-	// WTF? Java Windows doesn't get keypress / keyrelease for æøå!?!
-	// the keycode is 0 (unknown!)
-	// but on only keyTyped events.
-	// we write them here!
-	public void keyTyped(KeyEvent evt) {
-		if (Util.isWin()) {
-			char keychar = evt.getKeyChar();
-			try {
-				if (char2vk.containsKey(keychar)) {
-					int vk = char2vk.get(keychar);
-					rfb.writeKeyboardEvent(keychar, vk, true);
-					rfb.writeKeyboardEvent(keychar, vk, false);
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		evt.consume();
-	}
+	
 	
 	public void mouseWheelMoved(MouseWheelEvent e) {
 		processLocalMouseEvent(e, false);
@@ -812,39 +776,7 @@ public class VncCanvas extends Canvas implements KeyListener, MouseListener, Mou
 	// Actual event processing.
 	//
 
-	private void processLocalKeyEvent(KeyEvent evt) {
-		if (viewer.rfb != null && rfb.inNormalProtocol) {
-			if (!inputEnabled) {
-				if ((evt.getKeyChar() == 'r' || evt.getKeyChar() == 'R')
-						&& evt.getID() == KeyEvent.KEY_PRESSED) {
-					// Request screen update.
-					try {
-						rfb.writeFramebufferUpdateRequest(0, 0,
-								rfb.server.fb_width, rfb.server.fb_height,
-								false);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-			} else {
-				// Input enabled.
-				synchronized (rfb) {
-					try {
-						rfb.writeKeyboardEvent(evt);
-					} catch (IOException e) {
-						e.printStackTrace();
-					} catch (KeyUndefinedException e) {
-						// consume
-					}
-					rfb.notify();
-				}
-			}
-		}
-		// Don't ever pass keyboard events to AWT for default processing.
-		// Otherwise, pressing Tab would switch focus to ButtonPanel etc.
-		evt.consume();
-	}
-
+	
 	private void processLocalMouseEvent(MouseEvent evt, boolean moved) {
 		if (viewer.rfb != null && rfb.inNormalProtocol) {
 			if (!inSelectionMode) {
