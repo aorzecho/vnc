@@ -908,16 +908,20 @@ public class VncViewer implements java.lang.Runnable,
 	public void windowActivated(WindowEvent evt) {
 		logger.info("windowActivated");
 	}
-
-	public void windowDeactivated(WindowEvent evt) {
-		logger.info("windowDeactived");
+	
+	public void relaseAllKeys(){
 		try {
 			if(rfb != null){
 				rfb.releaseAllKeys();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
+		}		
+	}
+
+	public void windowDeactivated(WindowEvent evt) {
+		logger.info("windowDeactived");
+		relaseAllKeys();
 	}
 
 	public void windowOpened(WindowEvent evt) {
@@ -931,6 +935,7 @@ public class VncViewer implements java.lang.Runnable,
 
 	public void windowIconified(WindowEvent evt) {
 		logger.info("windowIconified");
+		relaseAllKeys();
 	}
 
 	public void windowDeiconified(WindowEvent evt) {

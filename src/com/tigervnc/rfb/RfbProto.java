@@ -799,7 +799,8 @@ public class RfbProto {
 	
 	public void releaseAllKeys() throws IOException{
 		for (Map.Entry<Integer, Integer> e : KeyboardEvent.getPressedKeys().entrySet()) {
-			os.write(new KeyboardEvent(e.getValue(), e.getKey(), false).getBytes());
+			KeyboardEvent ev = new KeyboardEvent(e.getValue(), e.getKey(), false); 
+			os.write(ev.getBytes());
 		}
 		KeyboardEvent.clearPressedKeys();
 	}

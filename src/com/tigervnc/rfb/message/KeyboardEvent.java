@@ -112,7 +112,11 @@ public class KeyboardEvent implements IServerMessage {
 					_alt_gr_pressed = true;
 					// release the by user pressed control key
 					addExtraEvent(new KeyboardEvent(X11_CONTROL,KeyEvent.VK_CONTROL, false));
-					addExtraEvent(new KeyboardEvent(X11_ALT_GRAPH, KeyEvent.VK_ALT_GRAPH, true));				
+					KeyboardEvent alt_gr_press = new KeyboardEvent(X11_ALT_GRAPH, KeyEvent.VK_ALT_GRAPH, true);
+					addExtraEvent(alt_gr_press);
+					
+					// ensures that it is released when ctrl+alt is used on linux to shift to anther desktop
+					keys_pressed.put(alt_gr_press._keycode, alt_gr_press._keysym);
 				}
 			} 
 			else if(_alt_gr_pressed){
@@ -129,8 +133,12 @@ public class KeyboardEvent implements IServerMessage {
 				if(!_alt_gr_pressed){
 					_alt_gr_pressed = true;
 					// release the by user pressed alt key
-					addExtraEvent(new KeyboardEvent(X11_ALT,KeyEvent.VK_ALT, false));
-					addExtraEvent(new KeyboardEvent(X11_ALT_GRAPH, KeyEvent.VK_ALT_GRAPH, true));				
+					addExtraEvent(new KeyboardEvent(X11_ALT,KeyEvent.VK_ALT, false));	
+					
+					KeyboardEvent alt_gr_press = new KeyboardEvent(X11_ALT_GRAPH, KeyEvent.VK_ALT_GRAPH, true);
+					addExtraEvent(alt_gr_press);
+					
+					keys_pressed.put(alt_gr_press._keycode, alt_gr_press._keysym);
 				}
 			}
 			else if(_alt_gr_pressed){
@@ -266,14 +274,12 @@ public class KeyboardEvent implements IServerMessage {
 	
 	protected void handleLinuxPecularities() throws KeyUndefinedException{
 		if (_keycode == KeyEvent.VK_UNDEFINED) {
-			System.out.println("undefined _keycode: " + _keycode + " _keysym: " + _keysym + " press " + _press);
 				
 			// Write the missing event here
 			if(!_press && char2vk.containsKey((char)_keysym)){
 				// In Linux with danish keyboard the keysym is undefined
 				// for press, type, release!?!
 				
-				System.out.println("writing extra keyevent for undefined keycode for the keysym: " + _keysym);
 				int vk = KeyboardEvent.char2vk.get((char)_keysym);
 				addExtraEvent(new KeyboardEvent(_keysym, vk, true));
 				addExtraEvent(new KeyboardEvent(_keysym, vk, false));

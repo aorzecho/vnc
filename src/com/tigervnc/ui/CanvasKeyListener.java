@@ -61,13 +61,11 @@ public class CanvasKeyListener implements KeyListener {
 	//
 	@Override
 	public void keyPressed(KeyEvent evt) {
-		System.out.println("keyPressed char:" + evt.getKeyChar() + " code" + evt.getKeyCode());
 		process(evt);
 	}
 
 	@Override
 	public void keyReleased(KeyEvent evt) {
-		System.out.println("keyReleased char:" + evt.getKeyChar() + " code" + evt.getKeyCode());
 		process(evt);
 	}
 
@@ -77,7 +75,6 @@ public class CanvasKeyListener implements KeyListener {
 	// but on only keyTyped events.
 	// we write them here!
 	public void keyTyped(KeyEvent evt) {
-		System.out.println("keyTyped char:" + evt.getKeyChar() + " code" + evt.getKeyCode());
 		
 		if (Util.isWin()) {
 			char keychar = evt.getKeyChar();
