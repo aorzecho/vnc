@@ -18,7 +18,21 @@ public class KeyboardEvent implements IServerMessage {
 
 	private static Logger logger = Logger.getLogger(VncViewer.class);
 	
-	public class KeyUndefinedException extends Exception {}
+	public static final Map<Character, Integer> char2vk = new HashMap<Character, Integer>();
+	static {
+		char2vk.put('æ', KeyEvent.VK_SEMICOLON);
+		char2vk.put('ø', KeyEvent.VK_QUOTE);
+		char2vk.put('å', KeyEvent.VK_OPEN_BRACKET);
+		char2vk.put('Æ', KeyEvent.VK_SEMICOLON);
+		char2vk.put('Ø', KeyEvent.VK_QUOTE);
+		char2vk.put('Å', KeyEvent.VK_OPEN_BRACKET);
+	}
+	
+	public class KeyUndefinedException extends Exception {
+		public KeyUndefinedException (String msg){
+			super(msg);
+		}
+	}
 
 	// Set from the main vnc response loop VncViewer, refactor that...
 	public static boolean extended_key_event = false;
@@ -37,14 +51,14 @@ public class KeyboardEvent implements IServerMessage {
 	}
 	
 	public static final int X11_BACK_SPACE = 0xff08;
-	public static int X11_TAB = 0xff09;
-	public static int X11_ENTER = 0xff0d;
-	public static int X11_ESCAPE = 0xff1b;
+	public static final int X11_TAB = 0xff09;
+	public static final int X11_ENTER = 0xff0d;
+	public static final int X11_ESCAPE = 0xff1b;
 	public static final int X11_ALT = 0xffe9;
 	public static final int X11_ALT_GRAPH = 0xff7e;
 	public static final int X11_CONTROL = 0xffe3;
 	public static final int X11_SHIFT = 0xffe1;
-	public static final int VK_META = 0xffe7;
+	public static final int X11_DELETE = 0xffff;
 
 	protected int _keysym;
 	protected int _keycode;
@@ -58,10 +72,7 @@ public class KeyboardEvent implements IServerMessage {
 		_keycode = evt.getKeyCode();
 		_keysym = evt.getKeyChar();
 		_press = (evt.getID() == KeyEvent.KEY_PRESSED);
-
-		if (_keycode == KeyEvent.VK_UNDEFINED) {
-			throw new KeyUndefinedException();
-		}
+		
 		handleShortcuts(evt);
 		handlePecularaties(evt);
 		
@@ -135,9 +146,9 @@ public class KeyboardEvent implements IServerMessage {
 			if (!(evt.isAltDown() && evt.isControlDown())) {
 				return;
 			}
-			addExtraEvent(new KeyboardEvent(0xffe3, KeyEvent.VK_CONTROL, _press));
-			addExtraEvent(new KeyboardEvent(0xffe9, KeyEvent.VK_ALT, _press));
-			addExtraEvent(new KeyboardEvent(0xffff, KeyEvent.VK_DELETE, _press));
+			addExtraEvent(new KeyboardEvent(X11_CONTROL, KeyEvent.VK_CONTROL, _press));
+			addExtraEvent(new KeyboardEvent(X11_ALT, KeyEvent.VK_ALT, _press));
+			addExtraEvent(new KeyboardEvent(X11_DELETE, KeyEvent.VK_DELETE, _press));
 			break;
 		case KeyEvent.VK_META: 		
 			// No Win key on Mac use META (cmd)
@@ -148,9 +159,9 @@ public class KeyboardEvent implements IServerMessage {
 			if (!(evt.isAltDown() && evt.isControlDown())) {
 				return;
 			}
-			addExtraEvent(new KeyboardEvent(0xffe3, KeyEvent.VK_CONTROL, _press));
-			addExtraEvent(new KeyboardEvent(0xffe9, KeyEvent.VK_ALT, _press));
-			addExtraEvent(new KeyboardEvent(0xffff, KeyEvent.VK_DELETE, _press));
+			addExtraEvent(new KeyboardEvent(X11_CONTROL, KeyEvent.VK_CONTROL, _press));
+			addExtraEvent(new KeyboardEvent(X11_ALT, KeyEvent.VK_ALT, _press));
+			addExtraEvent(new KeyboardEvent(X11_DELETE, KeyEvent.VK_DELETE, _press));
 			break;
 		}
 	}
@@ -253,6 +264,27 @@ public class KeyboardEvent implements IServerMessage {
 		return buf;
 	}
 	
+	protected void handleLinuxPecularities() throws KeyUndefinedException{
+		if (_keycode == KeyEvent.VK_UNDEFINED) {
+			System.out.println("undefined _keycode: " + _keycode + " _keysym: " + _keysym + " press " + _press);
+				
+			// Write the missing event here
+			if(!_press && char2vk.containsKey((char)_keysym)){
+				// In Linux with danish keyboard the keysym is undefined
+				// for press, type, release!?!
+				
+				System.out.println("writing extra keyevent for undefined keycode for the keysym: " + _keysym);
+				int vk = KeyboardEvent.char2vk.get((char)_keysym);
+				addExtraEvent(new KeyboardEvent(_keysym, vk, true));
+				addExtraEvent(new KeyboardEvent(_keysym, vk, false));
+				bypass_original_event = true;
+			}
+			else{
+				throw new KeyUndefinedException((char)_keysym + " doesn't have a keycode!");								
+			}
+		}
+	}
+	
 	private void handleMacPecularities(KeyEvent evt){
 		char keychar = (char) _keysym;
 
@@ -297,7 +329,7 @@ public class KeyboardEvent implements IServerMessage {
 		} else {
 			if (!keys_pressed.containsKey(_keycode)) {
 				// Do press ourself.
-				logger.debug("Writing key pressed event for " + _keysym
+				logger.debug("Writing key pressed event for " + (char)_keysym
 						+ " keycode: " + _keycode);
 				addExtraEvent(new KeyboardEvent(_keysym, _keycode, true));
 			} else {
@@ -306,17 +338,20 @@ public class KeyboardEvent implements IServerMessage {
 		}		
 	}
 
-	private void handlePecularaties(KeyEvent evt) {
+	private void handlePecularaties(KeyEvent evt) throws KeyUndefinedException{
 		if (Util.isMac()) {
 			handleMacPecularities(evt);
 		}
 		else if (Util.isWin()) {
 			handleWinPecularities(evt);
 		}
+		else if(Util.isLinux()){
+			handleLinuxPecularities();
+		}
 		
 		handleJavaPecularities(evt);
 	}
-	
+
 	public String toString(){
 		return (extended_key_event ? "extended" : "simple ")
 				 + "key event, keysym: " + _keysym + " keychar: '" + (char)_keysym + "'"

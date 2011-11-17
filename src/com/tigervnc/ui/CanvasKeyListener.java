@@ -8,19 +8,10 @@ import java.util.Map;
 
 import com.tigervnc.Util;
 import com.tigervnc.rfb.RfbProto;
+import com.tigervnc.rfb.message.KeyboardEvent;
 import com.tigervnc.rfb.message.KeyboardEvent.KeyUndefinedException;
 
 public class CanvasKeyListener implements KeyListener {
-	
-	private static final Map<Character, Integer> char2vk = new HashMap<Character, Integer>();
-	static {
-		char2vk.put('æ', KeyEvent.VK_SEMICOLON);
-		char2vk.put('ø', KeyEvent.VK_QUOTE);
-		char2vk.put('å', KeyEvent.VK_OPEN_BRACKET);
-		char2vk.put('Æ', KeyEvent.VK_SEMICOLON);
-		char2vk.put('Ø', KeyEvent.VK_QUOTE);
-		char2vk.put('Å', KeyEvent.VK_OPEN_BRACKET);
-	}
 
 	private RfbProto rfb;
 	private VncCanvas canvas;
@@ -52,6 +43,7 @@ public class CanvasKeyListener implements KeyListener {
 					} catch (IOException e) {
 						e.printStackTrace();
 					} catch (KeyUndefinedException e) {
+						System.err.println(e.getMessage());
 						// consume
 					}
 					rfb.notify();
@@ -86,11 +78,12 @@ public class CanvasKeyListener implements KeyListener {
 	// we write them here!
 	public void keyTyped(KeyEvent evt) {
 		System.out.println("keyTyped char:" + evt.getKeyChar() + " code" + evt.getKeyCode());
+		
 		if (Util.isWin()) {
 			char keychar = evt.getKeyChar();
 			try {
-				if (char2vk.containsKey(keychar)) {
-					int vk = char2vk.get(keychar);
+				if (KeyboardEvent.char2vk.containsKey(keychar)) {
+					int vk = KeyboardEvent.char2vk.get(keychar);
 					rfb.writeKeyboardEvent(keychar, vk, true);
 					rfb.writeKeyboardEvent(keychar, vk, false);
 				}
@@ -98,6 +91,7 @@ public class CanvasKeyListener implements KeyListener {
 				e.printStackTrace();
 			}
 		}
+		
 		evt.consume();
 	}
 

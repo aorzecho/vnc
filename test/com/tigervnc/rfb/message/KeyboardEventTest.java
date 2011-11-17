@@ -10,6 +10,7 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
+import com.tigervnc.Util;
 import com.tigervnc.rfb.Encodings;
 import com.tigervnc.rfb.message.KeyboardEvent.KeyUndefinedException;
 
@@ -22,7 +23,7 @@ public class KeyboardEventTest {
 	public void test_getExtendedKeyEvent(){
 		KeyboardEvent.extended_key_event = true;
 		boolean down = true;
-		byte[] key_ev = new KeyboardEvent(1,KeyEvent.VK_1,down).getBytes();		
+		byte[] key_ev = new KeyboardEvent((char)1,KeyEvent.VK_1,down).getBytes();		
 		Assert.assertEquals(255, Encodings.QEMU);
 //		    =============== ==================== ========== =======================
 //			No. of bytes    Type                 [Value]    Description
@@ -106,4 +107,18 @@ public class KeyboardEventTest {
 		Assert.assertEquals(false, alt_gr_release_event._press);
 	}
 	
+	@Test
+	public void test_æåø_on_danish_linux_keyboard_layout() throws KeyUndefinedException{
+		KeyboardEvent e = new KeyboardEvent('æ', KeyEvent.VK_UNDEFINED, false);
+		
+		if(Util.isLinux()){
+			e.handleLinuxPecularities();
+			
+			KeyboardEvent æ_press_event = e._extra_preceding_events.get(0);
+			KeyboardEvent æ_release_event = e._extra_preceding_events.get(1);
+			
+			Assert.assertEquals(KeyEvent.VK_SEMICOLON, æ_press_event._keycode);
+			Assert.assertEquals(KeyEvent.VK_SEMICOLON, æ_release_event._keycode);	
+		}
+	}
 }
