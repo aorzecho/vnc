@@ -16,7 +16,8 @@ import com.tigervnc.rfb.RfbUtil;
 
 public class KeyboardEvent implements IServerMessage {
 
-	private static Logger logger = Logger.getLogger(VncViewer.class);
+	
+	private static Logger logger = Logger.getLogger(KeyboardEvent.class);
 	
 	public static final Map<Character, Integer> char2vk = new HashMap<Character, Integer>();
 	static {
@@ -273,12 +274,13 @@ public class KeyboardEvent implements IServerMessage {
 	}
 	
 	protected void handleLinuxPecularities() throws KeyUndefinedException{
+		// WTF: presseing æøå only produces keyRelease
+		// and the keycodes are undefined for these.
+		
 		if (_keycode == KeyEvent.VK_UNDEFINED) {
-				
+			
 			// Write the missing event here
 			if(!_press && char2vk.containsKey((char)_keysym)){
-				// In Linux with danish keyboard the keysym is undefined
-				// for press, type, release!?!
 				
 				int vk = KeyboardEvent.char2vk.get((char)_keysym);
 				addExtraEvent(new KeyboardEvent(_keysym, vk, true));
@@ -287,6 +289,15 @@ public class KeyboardEvent implements IServerMessage {
 			}
 			else{
 				throw new KeyUndefinedException((char)_keysym + " doesn't have a keycode!");								
+			}
+		}
+		// still only key release
+		else if(_keycode == KeyEvent.VK_DEAD_DIAERESIS){
+			// e.g. öïë
+			if(!_press){
+				addExtraEvent(new KeyboardEvent(']', KeyEvent.VK_CLOSE_BRACKET, true));
+				addExtraEvent(new KeyboardEvent(']', KeyEvent.VK_CLOSE_BRACKET, false));
+				bypass_original_event = true;
 			}
 		}
 	}

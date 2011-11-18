@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
 import com.tigervnc.Util;
 import com.tigervnc.rfb.RfbProto;
 import com.tigervnc.rfb.message.KeyboardEvent;
@@ -13,6 +15,8 @@ import com.tigervnc.rfb.message.KeyboardEvent.KeyUndefinedException;
 
 public class CanvasKeyListener implements KeyListener {
 
+	private static Logger logger = Logger.getLogger(CanvasKeyListener.class);
+	
 	private RfbProto rfb;
 	private VncCanvas canvas;
 	
@@ -61,11 +65,13 @@ public class CanvasKeyListener implements KeyListener {
 	//
 	@Override
 	public void keyPressed(KeyEvent evt) {
+		logger.debug("KeyPressed: char: " + evt.getKeyChar() + " code: " + evt.getKeyCode());
 		process(evt);
 	}
 
 	@Override
 	public void keyReleased(KeyEvent evt) {
+		logger.debug("KeyReleased: char: " + evt.getKeyChar() + " code: " + evt.getKeyCode());
 		process(evt);
 	}
 
@@ -75,7 +81,7 @@ public class CanvasKeyListener implements KeyListener {
 	// but on only keyTyped events.
 	// we write them here!
 	public void keyTyped(KeyEvent evt) {
-		
+		logger.debug("KeyTyped: char: " + evt.getKeyChar() + " code: " + evt.getKeyCode());
 		if (Util.isWin()) {
 			char keychar = evt.getKeyChar();
 			try {
@@ -91,5 +97,5 @@ public class CanvasKeyListener implements KeyListener {
 		
 		evt.consume();
 	}
-
+	
 }
