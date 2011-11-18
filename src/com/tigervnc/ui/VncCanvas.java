@@ -41,12 +41,14 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.awt.im.InputContext;
 import java.awt.image.ColorModel;
 import java.awt.image.DirectColorModel;
 import java.awt.image.MemoryImageSource;
 import java.io.EOFException;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -136,9 +138,10 @@ public class VncCanvas extends Canvas implements MouseListener, MouseWheelListen
 	// The constructors.
 	//
 
+	
 	public VncCanvas(VncViewer v, int maxWidth_, int maxHeight_)
 			throws IOException {
-
+		
 		viewer = v;
 		maxWidth = maxWidth_;
 		maxHeight = maxHeight_;
