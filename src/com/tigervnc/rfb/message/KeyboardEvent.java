@@ -16,6 +16,8 @@ import com.tigervnc.rfb.RfbUtil;
 
 public class KeyboardEvent implements IServerMessage {
 
+	// for the values of the VK_... constants
+	// http://kickjava.com/src/java/awt/event/KeyEvent.java.htm
 	
 	private static Logger logger = Logger.getLogger(KeyboardEvent.class);
 	
@@ -220,7 +222,6 @@ public class KeyboardEvent implements IServerMessage {
 		byte[] events = new byte[0];
 		if (_extra_preceding_events != null) {
 			for (KeyboardEvent e : _extra_preceding_events) {
-				logger.debug("extra " + e);
 				events = Util.concat(events, e.getBytes());
 			}
 		}
@@ -300,6 +301,32 @@ public class KeyboardEvent implements IServerMessage {
 				bypass_original_event = true;
 			}
 		}
+		
+		// special case for danish keyboards ...
+		
+		// I don't know how to switch on the language layout of the keyboard:(
+		// The following code ruins it for english layouts...
+		
+		// A side note, have tried to force a specific locale upon the VncViewer
+		// has no effect...
+		
+//		else if(_keycode == KeyEvent.VK_QUOTE && _keysym == '\\'){
+//			// 222 = 0xde = VK_QUOTE
+//			_keycode = KeyEvent.VK_BACK_SLASH; 
+//			_keysym = '\\';	
+//		}
+//		
+//		else if(_keycode == KeyEvent.VK_QUOTE && _keysym == '\''){
+//			// 222 = 0xde = VK_QUOTE
+//			_keycode = KeyEvent.VK_BACK_SLASH; 
+//			_keysym = '\\';	
+//		}
+//		
+//		else if(_keycode == KeyEvent.VK_QUOTE && _keysym == '*'){
+//			// 222 = 0xde = VK_QUOTE
+//			_keycode = KeyEvent.VK_BACK_SLASH; 
+//			_keysym = '\\';	
+//		}
 	}
 	
 	private void handleMacPecularities(KeyEvent evt){
