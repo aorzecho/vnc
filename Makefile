@@ -31,9 +31,9 @@ sign: jar
 	@(mv vncs.jar vnc.jar)
 
 deploy: sign
-	@(mkdir -p examples/lib)
-	@(mv lib/log4j-java1.1.signed.jar examples/lib/log4j-java1.1.jar)
-	@(cp vnc.jar examples)
+	@(mkdir -p examples/js/vnc/resources)
+	@(mv lib/log4j-java1.1.signed.jar examples/js/vnc/resources/log4j-java1.1.jar)
+	@(cp vnc.jar examples/js/vnc/resources)
 
 runserver: deploy
 	@(cd ./examples/; python -m SimpleHTTPServer)

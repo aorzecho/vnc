@@ -18,17 +18,16 @@ form {
     </style>
     <script>
         djConfig = {
-          baseUrl: "/d/",
+          baseUrl: "/js/d/",
           debugAtAllCosts: true
         };
     </script>
     <script src="//static.irigo.com/dojo/1.6.1/dojo/dojo.xd.js"></script>
   </head>
   <body>
-    <nav></nav>
     <h1>VNC in the browser</h1>
 
-    <form>
+    <form id="form">
       <input id="host" type="text" name="host" required="required" placeholder="host" value="localhost"/>
       <input id="port" type="text" required="required" placeholder="port" value="5900" />
       <label for="show_controls">Show controls</label>
@@ -42,24 +41,22 @@ form {
     <div id="applets"></div>
 
   <script>
-dojo.require('vnc');
-dojo.ready(function(){
+dojo.require('vnc.Viewer');
 
-  function getArgs(){
-    return {
+dojo.ready(function(){
+  dojo.connect(dojo.byId('form'), 'submit', function(e){
+    var viewer = new vnc.Viewer({
+      title: 'The window title',
       host: dojo.byId('host').value,
       port: dojo.byId('port').value,
       show_controls: dojo.byId('show_controls').value,
-      title: "VNC Remote Desktop Viewer" 
-    };
-  }
-
-  dojo.query('form').onsubmit(function(e){
-    vnc.start('applets', getArgs());
+      node: dojo.byId('applets'),
+    });
+    viewer.start();
     e.preventDefault();
   });
 
-  dojo.subscribe(vnc.CONNECTION_ERROR, function(o){
+  dojo.subscribe(vnc.Viewer.CONNECTION_ERROR, function(o){
     alert(o.msg);
   });
 });

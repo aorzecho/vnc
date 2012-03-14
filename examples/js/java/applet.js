@@ -135,10 +135,11 @@ if(typeof dojo !== 'undefined'){ dojo.provide('java.applet'); }
         '  <param name="mayscript" value="true" />',
         params.join('\n'),
         '</object>'].join('\n');
-      setTimeout(function(){
-        node.innerHTML = t;
-      }, 0);}
-        
+
+        var wrapperNode = document.createElement('span');
+        wrapperNode.innerHTML = t;
+        node.appendChild(wrapperNode);
+    }
   };
 
 })(window);
