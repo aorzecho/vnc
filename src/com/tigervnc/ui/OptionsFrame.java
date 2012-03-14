@@ -32,13 +32,16 @@ package com.tigervnc.ui;
 import java.awt.*;
 import java.awt.event.*;
 
+import org.apache.log4j.Logger;
+
 import com.tigervnc.VncViewer;
 import com.tigervnc.rfb.Encodings;
 import com.tigervnc.rfb.RfbProto;
 
-public class OptionsFrame extends Frame
-  implements WindowListener, ActionListener, ItemListener {
+public class OptionsFrame extends Frame implements WindowListener, ActionListener, ItemListener {
 
+  private static Logger logger = Logger.getLogger(VncViewer.class);
+	
   static String[] names = {
     "Encoding",
     "Compression level",
@@ -271,6 +274,7 @@ public class OptionsFrame extends Frame
   //
 
   public void setEncodings() {
+	  logger.info("changing encodings: " +  choices[encodingIndex].getSelectedItem());
     useCopyRect = choices[useCopyRectIndex].getSelectedItem().equals("Yes");
 
     preferredEncoding = Encodings.EncodingRaw;
@@ -418,6 +422,7 @@ public class OptionsFrame extends Frame
   // Respond to actions on Choice controls
   //
 
+  @Override
   public void itemStateChanged(ItemEvent evt) {
     Object source = evt.getSource();
 

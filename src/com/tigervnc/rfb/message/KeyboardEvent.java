@@ -62,6 +62,7 @@ public class KeyboardEvent implements IServerMessage {
 	public static final int X11_CONTROL = 0xffe3;
 	public static final int X11_SHIFT = 0xffe1;
 	public static final int X11_DELETE = 0xffff;
+	public static final int X11_WINDOWS = 0xff20;
 
 	protected int _keysym;
 	protected int _keycode;
@@ -108,7 +109,6 @@ public class KeyboardEvent implements IServerMessage {
 		// WTF? no VK alt Gr on Windows, instead Ctrl + Alt
 		// Actually just always do this, so Ctrl + Alt is Alt Gr
 		if (_keycode == KeyEvent.VK_ALT) {
-			
 			if (evt.isControlDown()) {
 				bypass_original_event = true;
 				if(!_alt_gr_pressed){
@@ -121,7 +121,7 @@ public class KeyboardEvent implements IServerMessage {
 					// ensures that it is released when ctrl+alt is used on linux to shift to anther desktop
 					keys_pressed.put(alt_gr_press._keycode, alt_gr_press._keysym);
 				}
-			} 
+			}
 			else if(_alt_gr_pressed){
 				bypass_original_event = true;
 				// release
@@ -130,7 +130,6 @@ public class KeyboardEvent implements IServerMessage {
 			}
 		}
 		else if(_keycode == KeyEvent.VK_CONTROL){
-			
 			if(evt.isAltDown()){
 				bypass_original_event = true;
 				if(!_alt_gr_pressed){
@@ -151,7 +150,6 @@ public class KeyboardEvent implements IServerMessage {
 				_alt_gr_pressed = false;
 			}
 		}
-		
 		switch (_keycode) {
 		case KeyEvent.VK_BACK_SPACE:
 			if (!(evt.isAltDown() && evt.isControlDown())) {
@@ -173,6 +171,14 @@ public class KeyboardEvent implements IServerMessage {
 			addExtraEvent(new KeyboardEvent(X11_CONTROL, KeyEvent.VK_CONTROL, _press));
 			addExtraEvent(new KeyboardEvent(X11_ALT, KeyEvent.VK_ALT, _press));
 			addExtraEvent(new KeyboardEvent(X11_DELETE, KeyEvent.VK_DELETE, _press));
+			break;
+		case KeyEvent.VK_BACK_QUOTE:
+			// alt-tab is mapped to alt-`
+			if(evt.isAltDown()){
+				bypass_original_event = true;
+				KeyboardEvent tab = new KeyboardEvent(X11_TAB, KeyEvent.VK_TAB, _press);
+				addExtraEvent(tab);
+			}
 			break;
 		}
 	}
@@ -214,6 +220,12 @@ public class KeyboardEvent implements IServerMessage {
 			break;
 		case KeyEvent.VK_SHIFT:
 			_keysym = X11_SHIFT;
+			break;
+		case X11_WINDOWS:
+			// WTF? Java is not giving us the X11_WINDOWS value when pressing
+			// the windows key.
+			// TODO: is this only on Linux?
+			_keycode = KeyEvent.VK_WINDOWS;
 			break;
 		}
 	}
