@@ -20,7 +20,7 @@ public class VncEventPublisher {
 	}
 	
 	public static void publish(VncEvent e, String txt, Exception ex){
-		logger.info("publish: " + e + " " + txt + " " + ex);
+		logger.info("publish: " + e + " " + txt + (ex != null ? " " + ex : ""));
 		
 		switch(e){
 		case INIT:

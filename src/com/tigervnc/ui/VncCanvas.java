@@ -611,8 +611,8 @@ public class VncCanvas extends Canvas implements MouseListener, MouseWheelListen
 				}
 			}
 		} catch (EOFException e) {
-			System.err.println("Server closed stream, closing ...");
-			viewer.disconnect();
+			logger.info("Stream closed (EOF), closing ...");
+			viewer.destroy();
 		}
 	}
 

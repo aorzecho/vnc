@@ -44,10 +44,12 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.NoRouteToHostException;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.management.RuntimeErrorException;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
@@ -176,7 +178,8 @@ public class VncViewer implements java.lang.Runnable,
 			String msg = "Network error: could not connect to server: " + host+ ":" + port;
 			VncEventPublisher.publish(VncEvent.CONNECTION_ERROR, msg, e);
 			destroy();
-		} catch (EOFException e) {
+		} 
+		catch (EOFException e) {
 			if (showOfflineDesktop) {
 				e.printStackTrace();
 				System.out
@@ -206,7 +209,6 @@ public class VncViewer implements java.lang.Runnable,
 				fatalError(e.toString(), e);
 			}
 		}
-
 	}
 
 	//
@@ -244,7 +246,8 @@ public class VncViewer implements java.lang.Runnable,
 	void processNormalProtocol() throws Exception {
 		try {
 			vncCanvas.processNormalProtocol();
-		} catch (Exception e) {
+		} 
+		catch (Exception e) {
 			if (rfbThread == null) {
 				logger.info("Ignoring RFB socket exceptions"
 						+ " because applet is stopping");
@@ -739,14 +742,6 @@ public class VncViewer implements java.lang.Runnable,
 
 		if (rfb != null && !rfb.closed())
 			rfb.close();
-		options.dispose();
-
-		if (inAnApplet) {
-			VncEventPublisher.publish(VncEvent.DESTROY, "destroyed");
-			showMessage("Disconnected");
-		} else {
-			System.exit(0);
-		}
 	}
 
 	//
@@ -756,14 +751,7 @@ public class VncViewer implements java.lang.Runnable,
 
 	synchronized public void fatalError(String str) {
 		logger.error(str);
-
-		if (inAnApplet) {
-			// vncContainer null, applet not inited,
-			// can not present the error to the user.
-			Thread.currentThread().stop();
-		} else {
-			System.exit(1);
-		}
+		destroy();
 	}
 
 	synchronized public void fatalError(String str, Exception e) {
@@ -773,20 +761,12 @@ public class VncViewer implements java.lang.Runnable,
 			// Not necessary to show error message if the error was caused
 			// by I/O problems after the rfb.close() method call.
 			logger.info("RFB thread finished");
-			return;
 		}
-
-		e.printStackTrace();
-
-		if (rfb != null)
-			rfb.close();
-
-		if (inAnApplet) {
-			showMessage(str);
+		else{
+			e.printStackTrace();
 			destroy();
-		} else {
-			System.exit(1);
 		}
+
 	}
 
 	//
@@ -836,13 +816,27 @@ public class VncViewer implements java.lang.Runnable,
 
 	public void destroy() {
 		logger.info("Destroying applet");
-
-		vncContainer.removeAll();
-		options.dispose();
-
-		if (rfb != null && !rfb.closed())
-			rfb.close();
-		vncFrame.dispose();
+		if(vncContainer != null){
+			vncContainer.removeAll();
+		}
+		if(options != null){			
+			options.dispose();
+		}
+		if(vncFrame != null){
+			vncFrame.dispose();			
+		}
+		if (rfb != null){
+			disconnect();
+		}
+		if (inAnApplet) {
+			VncEventPublisher.publish(VncEvent.DESTROY, "destroyed");
+			if(VncViewer.applet != null){
+				VncViewer.applet.destroy();
+			}
+			showMessage("Disconnected");
+		} else {
+			System.exit(0);
+		}
 	}
 
 	//
@@ -886,19 +880,15 @@ public class VncViewer implements java.lang.Runnable,
 	// Close application properly on window close event.
 	//
 
+	@Override
 	public void windowClosing(WindowEvent evt) {
 		logger.info("windowClosing");
-		if (rfb != null)
-			disconnect();
-
-		vncContainer.hide();
-
-		if (!inAnApplet) {
-			System.exit(0);
-		}
-		else{
-			if(VncViewer.applet != null){VncViewer.applet.destroy();}			
-		}
+		destroy();
+	}
+	
+	@Override
+	public void windowClosed(WindowEvent evt) {
+		logger.info("windowClosed");
 	}
 
 	//
@@ -926,11 +916,6 @@ public class VncViewer implements java.lang.Runnable,
 
 	public void windowOpened(WindowEvent evt) {
 		logger.info("windowOpened");
-	}
-
-	@Override
-	public void windowClosed(WindowEvent evt) {
-		logger.info("windowClosed");
 	}
 
 	public void windowIconified(WindowEvent evt) {

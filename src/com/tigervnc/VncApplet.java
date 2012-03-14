@@ -45,13 +45,6 @@ public class VncApplet extends Applet2 {
 			}
 		});
 	}
-	
-	@Override
-	public void destroy(){
-		logger.info("destroy");
-		publishEvent(Event.DESTROY);
-		super.destroy();
-	}
 
 	public void startVNC() {
 		VncViewer.main(new String[] { 
@@ -74,21 +67,5 @@ public class VncApplet extends Applet2 {
 	private void toFront(){
 		setVisible(true);
 		requestFocus();
-	}
-	
-	private enum Event {
-		INIT("Init"),
-		DESTROY("Destroy"),
-		CONNECTION_ERROR("ConnectionError");
-
-		private String name;
-
-		Event(String name) {
-			this.name = name;
-		}
-
-		public String toString() {
-			return name;
-		}
 	}
 }

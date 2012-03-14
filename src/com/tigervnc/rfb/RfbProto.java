@@ -43,16 +43,20 @@ import com.tigervnc.rfb.message.Authentication;
 import com.tigervnc.rfb.message.ClientCutText;
 import com.tigervnc.rfb.message.FramebufferUpdateRequest;
 import com.tigervnc.rfb.message.KeyboardEvent;
+import com.tigervnc.rfb.message.KeyboardEvent.KeyUndefinedException;
 import com.tigervnc.rfb.message.PointerEvent;
 import com.tigervnc.rfb.message.ServerInit;
 import com.tigervnc.rfb.message.SetColorMapEntries;
 import com.tigervnc.rfb.message.SetEncodings;
 import com.tigervnc.rfb.message.SetPixelFormat;
 import com.tigervnc.rfb.message.Version;
-import com.tigervnc.rfb.message.KeyboardEvent.KeyUndefinedException;
+
+import org.apache.log4j.Logger;
 
 public class RfbProto {
 
+	private static Logger logger = Logger.getLogger(RfbProto.class);
+	
 	String host;
 	int port;
 	Socket sock;
@@ -159,9 +163,9 @@ public class RfbProto {
 
 	public synchronized void close() {
 		try {
+			logger.info("Closing RFB socket");
 			sock.close();
 			closed = true;
-			System.out.println("RFB socket closed");
 			if (rec != null) {
 				rec.close();
 				rec = null;

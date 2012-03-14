@@ -7,7 +7,6 @@ public class Applet2 extends java.applet.Applet{
 	private String callback;
 	
 	public void init(){
-		System.out.println("INIT");
 		js = JSObject.getWindow(this);
 		callback = getRequiredParameter("callback");
 	}
