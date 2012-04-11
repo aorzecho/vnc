@@ -1,14 +1,17 @@
 package com.tigervnc;
-import netscape.javascript.JSObject;
+//import netscape.javascript.JSObject;
 
-public class Applet2 extends java.applet.Applet{
+import javax.swing.JApplet;
+
+
+public class Applet2 extends JApplet {
 	
-	private JSObject js;
-	private String callback;
+//	private JSObject js;
+//	private String callback;
 	
 	public void init(){
-		js = JSObject.getWindow(this);
-		callback = getRequiredParameter("callback");
+//		js = JSObject.getWindow(this);
+//		callback = getRequiredParameter("callback");
 	}
 	
 	protected String getParameter(String name, String default_value){
@@ -28,10 +31,10 @@ public class Applet2 extends java.applet.Applet{
 	}
 	
 	protected void publishEvent(Object event, Object ... args){
-		String js_args = "'" + event + "'";
-		for(Object a : args){
-			js_args += ", '" + a.toString() + "'"; 
-		}		
-		js.eval(callback + "(" + js_args + ")");
+//		String js_args = "'" + event + "'";
+//		for(Object a : args){
+//			js_args += ", '" + a.toString() + "'"; 
+//		}		
+//		js.eval(callback + "(" + js_args + ")");
 	}
 }

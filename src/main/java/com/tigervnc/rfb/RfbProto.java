@@ -50,6 +50,7 @@ import com.tigervnc.rfb.message.SetColorMapEntries;
 import com.tigervnc.rfb.message.SetEncodings;
 import com.tigervnc.rfb.message.SetPixelFormat;
 import com.tigervnc.rfb.message.Version;
+import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
@@ -315,11 +316,17 @@ public class RfbProto {
 	}
 	
 	public void writeKeyboardEvent(KeyEvent evt) throws IOException, KeyUndefinedException{
-		os.write(new KeyboardEvent(evt).getBytes());
+            byte[] buf = new KeyboardEvent(evt).getBytes(); 
+            os.write(buf);
+            logger.debug("writeKeyboardEvent " + evt + "  bytes:" + Arrays.toString(buf));
 	}
 	
 	public void writeKeyboardEvent(int keysym, int keycode, boolean press) throws IOException{
-		os.write(new KeyboardEvent(keysym, keycode, press).getBytes());
+            byte[] buf = new KeyboardEvent(keysym, keycode, press).getBytes();
+		os.write(buf);
+            logger.debug("writeKeyboardEvent " 
+                    + keysym + "/" + keycode + "/" + press
+                    + "  bytes:" + Arrays.toString(buf));
 	}
 	
 	public void writePointerEvent(MouseEvent evt) throws IOException {

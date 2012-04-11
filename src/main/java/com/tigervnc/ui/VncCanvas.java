@@ -377,7 +377,7 @@ public class VncCanvas extends Canvas implements MouseListener, MouseWheelListen
 		viewer.canvasPanel.setSize(scaledWidth, scaledHeight);
 		
 		// if size changed resize frame
-		viewer.vncFrame.pack();
+		viewer.pack();
 	}
 
 	//
@@ -433,9 +433,9 @@ public class VncCanvas extends Canvas implements MouseListener, MouseWheelListen
 						int rw = rfb.updateRectW, rh = rfb.updateRectH;
 						int e_type = rfb.updateRectEncoding;
 
-						// System.out.println("FramebufferUpdate type=" + e_type +
-						// " area (" + rw + "," + rh + ") at location " + rx + "," +
-						// ry);
+//						 System.out.println("FramebufferUpdate type=" + e_type +
+//						 " area (" + rw + "," + rh + ") at location " + rx + "," +
+//						 ry);
 
 						if (e_type == Encodings.EncodingLastRect)
 							break;

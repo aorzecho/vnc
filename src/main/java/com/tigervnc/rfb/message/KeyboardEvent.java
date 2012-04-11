@@ -73,10 +73,12 @@ public class KeyboardEvent implements IServerMessage {
 	private boolean bypass_original_event = false;
 
 	public KeyboardEvent(KeyEvent evt) throws KeyUndefinedException {
-		_keycode = evt.getKeyCode();
-		_keysym = evt.getKeyChar();
-		_press = (evt.getID() == KeyEvent.KEY_PRESSED);
 		
+		KeyEntry key = KeyboardEventMap.remapCodes(evt);
+		_keycode = key.keycode;
+		_keysym = key.keysym;
+		_press = (evt.getID() == KeyEvent.KEY_PRESSED);
+                
 		handleShortcuts(evt);
 		handlePecularaties(evt);
 		
@@ -105,7 +107,7 @@ public class KeyboardEvent implements IServerMessage {
 	 * @param evt
 	 * @return whether a shortcut was applied.
 	 */
-	protected void handleShortcuts(KeyEvent evt) {		
+	final protected void handleShortcuts(KeyEvent evt) {		
 		// WTF? no VK alt Gr on Windows, instead Ctrl + Alt
 		// Actually just always do this, so Ctrl + Alt is Alt Gr
 		if (_keycode == KeyEvent.VK_ALT) {
@@ -172,14 +174,14 @@ public class KeyboardEvent implements IServerMessage {
 			addExtraEvent(new KeyboardEvent(X11_ALT, KeyEvent.VK_ALT, _press));
 			addExtraEvent(new KeyboardEvent(X11_DELETE, KeyEvent.VK_DELETE, _press));
 			break;
-		case KeyEvent.VK_BACK_QUOTE:
-			// alt-tab is mapped to alt-`
-			if(evt.isAltDown()){
-				bypass_original_event = true;
-				KeyboardEvent tab = new KeyboardEvent(X11_TAB, KeyEvent.VK_TAB, _press);
-				addExtraEvent(tab);
-			}
-			break;
+//		case KeyEvent.VK_BACK_QUOTE:
+//			// alt-tab is mapped to alt-`
+//			if(evt.isAltDown()){
+//				bypass_original_event = true;
+//				KeyboardEvent tab = new KeyboardEvent(X11_TAB, KeyEvent.VK_TAB, _press);
+//				addExtraEvent(tab);
+//			}
+//			break;
 		}
 	}
 
@@ -195,7 +197,7 @@ public class KeyboardEvent implements IServerMessage {
 		return getKeyEvent();
 	}
 
-	protected void handleUndefinedJavaKeysymsConvert2x11(int keycode) {
+	final protected void handleUndefinedJavaKeysymsConvert2x11(int keycode) {
 		switch (keycode) {
 		case KeyEvent.VK_BACK_SPACE:
 			_keysym = X11_BACK_SPACE;
@@ -254,7 +256,7 @@ public class KeyboardEvent implements IServerMessage {
 	}
 
 	protected byte[] getExtendedKeyEvent() {
-		int rfbcode = KeyboardEventMap.java2rfb[_keycode];
+		int rfbcode = KeyboardEventMap.java2rfb(_keycode);
 		byte[] buf = new byte[12];
 		buf[0] = (byte) Encodings.QEMU;
 		buf[1] = (byte) 0; // *submessage-type*
@@ -290,30 +292,29 @@ public class KeyboardEvent implements IServerMessage {
 		// WTF: presseing æøå only produces keyRelease
 		// and the keycodes are undefined for these.
 		
-		if (_keycode == KeyEvent.VK_UNDEFINED) {
-			
-			// Write the missing event here
-			if(!_press && char2vk.containsKey((char)_keysym)){
-				
-				int vk = KeyboardEvent.char2vk.get((char)_keysym);
-				addExtraEvent(new KeyboardEvent(_keysym, vk, true));
-				addExtraEvent(new KeyboardEvent(_keysym, vk, false));
-				bypass_original_event = true;
-			}
-			else{
-				throw new KeyUndefinedException((char)_keysym + " doesn't have a keycode!");								
-			}
-		}
-		// still only key release
-		else if(_keycode == KeyEvent.VK_DEAD_DIAERESIS){
-			// e.g. öïë
-			if(!_press){
-				addExtraEvent(new KeyboardEvent(']', KeyEvent.VK_CLOSE_BRACKET, true));
-				addExtraEvent(new KeyboardEvent(']', KeyEvent.VK_CLOSE_BRACKET, false));
-				bypass_original_event = true;
-			}
-		}
-		
+//		if (_keycode == KeyEvent.VK_UNDEFINED) {
+//			// Write the missing event here
+//			if(!_press && char2vk.containsKey((char)_keysym)){
+//				
+//				int vk = KeyboardEvent.char2vk.get((char)_keysym);
+//				addExtraEvent(new KeyboardEvent(_keysym, vk, true));
+//				addExtraEvent(new KeyboardEvent(_keysym, vk, false));
+//				bypass_original_event = true;
+//			}
+//                        else if (!extended_key_event || KeyboardEventMap.java2rfb(_keycode)==null) {
+//				throw new KeyUndefinedException((char)_keysym + " doesn't have a keycode!");								
+//			}
+//		}
+//		// still only key release
+//		else if(_keycode == KeyEvent.VK_DEAD_DIAERESIS){
+//			// e.g. öïë
+//			if(!_press){
+//				addExtraEvent(new KeyboardEvent(']', KeyEvent.VK_CLOSE_BRACKET, true));
+//				addExtraEvent(new KeyboardEvent(']', KeyEvent.VK_CLOSE_BRACKET, false));
+//				bypass_original_event = true;
+//			}
+//		}
+//		
 		// special case for danish keyboards ...
 		
 		// I don't know how to switch on the language layout of the keyboard:(
@@ -363,17 +364,17 @@ public class KeyboardEvent implements IServerMessage {
 	}
 	
 	private void handleWinPecularities(KeyEvent evt){
-		if (_keycode == KeyEvent.VK_DEAD_ACUTE) {
-			// WTF? When danish layout VK_EQUALS is changed to DEAD_ACUTE
-			_keycode = KeyEvent.VK_EQUALS;
-		}
-		else if(_keycode == KeyEvent.VK_QUOTE){
-			if(_keysym == '\'' || _keysym == '*'){
-			// on danish layouts pressing backslash button
-			// wrongly produces 222 (VK_QUOTE) which is the keycode for ø!
-			_keycode = KeyEvent.VK_BACK_SLASH;
-			}
-		}
+//		if (_keycode == KeyEvent.VK_DEAD_ACUTE) {
+//			// WTF? When danish layout VK_EQUALS is changed to DEAD_ACUTE
+//			_keycode = KeyEvent.VK_EQUALS;
+//		}
+//		else if(_keycode == KeyEvent.VK_QUOTE){
+//			if(_keysym == '\'' || _keysym == '*'){
+//			// on danish layouts pressing backslash button
+//			// wrongly produces 222 (VK_QUOTE) which is the keycode for ø!
+//			_keycode = KeyEvent.VK_BACK_SLASH;
+//			}
+//		}
 	}
 	
 	private void handleJavaPecularities(KeyEvent evt){

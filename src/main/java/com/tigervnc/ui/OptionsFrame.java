@@ -183,7 +183,6 @@ public class OptionsFrame extends Frame implements WindowListener, ActionListene
 	}
       }
     }
-
     // Get scaling factor from parameters and set it
     // to gui and class member scalingFactor
     
@@ -196,12 +195,16 @@ public class OptionsFrame extends Frame implements WindowListener, ActionListene
       choices[scalingFactorIndex].select(s);
     }
 
+  }
+  
+  public void updateState() {
     // Make the booleans and encodings array correspond to the state of the GUI
 
     setEncodings();
     setColorFormat();
     setContinuousUpdates();
     setOtherOptions();
+      
   }
   
   //
@@ -390,6 +393,8 @@ public class OptionsFrame extends Frame implements WindowListener, ActionListene
       = choices[viewOnlyIndex].getSelectedItem().equals("Yes");
     if (viewer.vncCanvas != null)
       viewer.vncCanvas.enableInput(!viewOnly);
+    if (viewer.sendKeysMenu != null)
+        viewer.sendKeysMenu.setEnabled(!viewOnly);
 
     shareDesktop
       = choices[shareDesktopIndex].getSelectedItem().equals("Yes");
