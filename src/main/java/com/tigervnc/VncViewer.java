@@ -69,6 +69,7 @@ import com.tigervnc.ui.ReloginPanel;
 import com.tigervnc.ui.VncCanvas;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.*;
 
 public class VncViewer implements java.lang.Runnable,
@@ -81,7 +82,6 @@ public class VncViewer implements java.lang.Runnable,
 	public static boolean inAnApplet = true;
 	public static VncApplet applet;
 
-        public static VncViewer instance;
 	//
 	// main() is called when run as a java program from the command line.
 	// It simply runs the applet inside a newly-created frame.
@@ -98,12 +98,12 @@ public class VncViewer implements java.lang.Runnable,
 
 	public JFrame vncFrame;
 	public Container vncContainer;
-        public LayoutManager containerDefaultLayout;
+	public LayoutManager containerDefaultLayout;
 	public JLabel connStatusLabel;
 	public VncCanvas vncCanvas;
 	public Panel canvasPanel;
 	public OptionsFrame options;
-        public JMenu sendKeysMenu;
+	public JMenu sendKeysMenu;
 
 	String cursorUpdatesDef;
 	String eightBitColorsDef;
@@ -124,152 +124,148 @@ public class VncViewer implements java.lang.Runnable,
 	public int deferUpdateRequests;
 	public int debugStatsExcludeUpdates;
 	public int debugStatsMeasureUpdates;
-
-
+	
 	public VncViewer(String[] argv) {
 		BasicConfigurator.configure();
 		mainArgs = argv;
 		
-                VncViewer instance = this;
-                
 		readParameters();
 		setLogLevel(log_level);
 		initFrame();
 
 	}
 	
-	private void initFrame () {
-                if (separateWindow) {
-                    vncFrame = new JFrame("TigerVNC");
-                    vncFrame.setResizable(false);
-                    vncContainer = vncFrame.getContentPane();
-                    vncFrame.setJMenuBar(createMenuBar());
-                    vncFrame.addWindowListener(this);
-                    vncFrame.addComponentListener(this);
+	private void initFrame() {
+		if (separateWindow) {
+			vncFrame = new JFrame("TigerVNC");
+			vncFrame.setResizable(false);
+			vncContainer = vncFrame.getContentPane();
+			vncFrame.setJMenuBar(createMenuBar());
+			vncFrame.addWindowListener(this);
+			vncFrame.addComponentListener(this);
 //                    vncFrame.addFocusListener(this);
-                    if (inAnApplet) {
-    			Panel gridPanel = new Panel(new GridLayout(0, 1));
-			Panel outerPanel = new Panel(new FlowLayout(FlowLayout.LEFT));
-			outerPanel.add(gridPanel);
-			applet.getContentPane().setLayout(new FlowLayout(FlowLayout.LEFT, 30, 16));
-			applet.getContentPane().add(outerPanel);
+			if (inAnApplet) {
+				Panel gridPanel = new Panel(new GridLayout(0, 1));
+				Panel outerPanel = new Panel(new FlowLayout(FlowLayout.LEFT));
+				outerPanel.add(gridPanel);
+				applet.getContentPane().setLayout(new FlowLayout(FlowLayout.LEFT, 30, 16));
+				applet.getContentPane().add(outerPanel);
 
-                        gridPanel.add(button("Vnc Console", "requestFocus"));
-                    }
-                } else {
-                    vncContainer = applet.getContentPane();
-                    applet.setJMenuBar(createMenuBar());
-                    applet.addComponentListener(this);
+				gridPanel.add(button("Vnc Console", "requestFocus"));
+			}
+		} else {
+			vncContainer = applet.getContentPane();
+			applet.setJMenuBar(createMenuBar());
+//			applet.addComponentListener(this);
 //                    applet.addFocusListener(this);
-                }
-                containerDefaultLayout = vncContainer.getLayout();
-                canvasPanel = new Panel();
-                vncContainer.add(canvasPanel);
+		}
+		containerDefaultLayout = vncContainer.getLayout();
+		canvasPanel = new Panel();
+		vncContainer.add(canvasPanel);
 
-                options = new OptionsFrame(this);
-		if(showControls){
+		options = new OptionsFrame(this);
+		if (showControls) {
 			options.setVisible(true);
 		}
 
 		connect();
 	}
 
-        public void pack () {
-            if (separateWindow)
-                vncFrame.pack();
-            else {
-                applet.validate();
-                if (vncCanvas != null)
-                    applet.resizeBrowserWindow(
-                        vncCanvas.getWidth(), 
-                        vncCanvas.getHeight() + applet.getJMenuBar().getHeight());
-            }
-        }
-        
-        private void setTitle (String title) {
-            if (separateWindow)
-                vncFrame.setTitle(title);
-        }
-        
-        private void show() {
-            if (separateWindow)
-                vncFrame.setVisible(true);
-            else
-                applet.setVisible(true);
-        }
-        
-        private JMenuBar createMenuBar () {
-            JMenuBar menuBar = new JMenuBar();
-            menuBar.add(button("Disconnect", "destroy"));
-            menuBar.add(button("Options", "toggleOptions"));
-            menuBar.add(button("Refresh", "refresh"));
-            
-            JMenu fixMenu = new JMenu ("Keyboard setup");
-            menuBar.add(fixMenu);
-            
-            for (String group : KeyboardEventMap.manualFixes.keySet()) {
-                List<ApplyKbFixAction> fixes = KeyboardEventMap.manualFixes.get(group);
-                if ("".equals(group) || fixes.size() == 1 ) { // checkboxes
-                    for (ApplyKbFixAction action : fixes) {
-                        JCheckBoxMenuItem item = new JCheckBoxMenuItem(action);
-                        item.setSelected(action.isApplied());
-                        fixMenu.add(item);
-                    }
-                } else {
-                    ButtonGroup bg = new ButtonGroup();
-                    JRadioButtonMenuItem item = new JRadioButtonMenuItem("-- " + group + " --", true);
-                    fixMenu.add(item);
-                    bg.add(item);
-                    for (ApplyKbFixAction action : fixes) {
-                        item = new JRadioButtonMenuItem(action);
-                        item.addChangeListener(action);
-                        fixMenu.add(item);
-                        bg.add(item);
-			bg.setSelected(item.getModel(), action.isApplied());
-                    }
-                }
-                fixMenu.add(new JSeparator());
-            }
+	public void pack() {
+		if (separateWindow) {
+			vncFrame.pack();
+		} else {
+			applet.validate();
+			if (vncCanvas != null) {
+				applet.resizeBrowserWindow(
+						vncCanvas.getWidth(),
+						vncCanvas.getHeight() + applet.getJMenuBar().getHeight());
+			}
+		}
+	}
 
-            sendKeysMenu = new JMenu("Send key");
-            sendKeysMenu.setEnabled(false); //set in Options if input is enabled
-            menuBar.add(sendKeysMenu);
-            sendKeysMenu.add(menuItem("Ctrl+Alt+Del", "sendKey", new KeyEntry("VK_DELETE+ALT+CTRL")));
-            sendKeysMenu.add(menuItem("Ctrl+Escape", "sendKey", new KeyEntry("VK_ESCAPE+CTRL")));
-            sendKeysMenu.add(menuItem("Ctrl+Alt+BkSpace", "sendKey", new KeyEntry("VK_BACK_SPACE+ALT+CTRL")));
-            sendKeysMenu.add(menuItem("Ctrl+Alt+F1", "sendKey", new KeyEntry("VK_F1+ALT+CTRL")));
-            sendKeysMenu.add(menuItem("Ctrl+Alt+F7", "sendKey", new KeyEntry("VK_F7+ALT+CTRL")));
-            sendKeysMenu.add(menuItem("releaseAll", "sendKey", new KeyEntry("VK_SHIFT+ALT+CTRL+ALT_GRAPH")));
-            return menuBar;
-        }
-        
-        
-        
-        private JButton button (String label, String action, Object ... args) {
-            JButton btn = new JButton(label);
-            try {
-                btn.addActionListener(new InvokeAction(this, action, args));
-            } catch (NoSuchMethodException ex) {
-                logger.error("Unable to register " + action + " action", ex);
-            }
-            return btn;
-        }
-        
-        private JMenuItem menuItem (String label, String action, Object ... args) {
-            JMenuItem item = new JMenuItem(label);
-            try {
-                item.addActionListener(new InvokeAction(this, action, args));
-            } catch (NoSuchMethodException ex) {
-                logger.error("Unable to register " + action + " action", ex);
-            }
-            return item;
-        }
-        
-        
-        
+	private void setTitle(String title) {
+		if (separateWindow) {
+			vncFrame.setTitle(title);
+		}
+	}
+
+	private void show() {
+		if (separateWindow) {
+			vncFrame.setVisible(true);
+		} else {
+			applet.setVisible(true);
+		}
+	}
+
+	private JMenuBar createMenuBar() {
+		JMenuBar menuBar = new JMenuBar();
+		menuBar.add(button("Disconnect", "destroy"));
+		menuBar.add(button("Options", "toggleOptions"));
+		menuBar.add(button("Refresh", "refresh"));
+
+		JMenu fixMenu = new JMenu("Keyboard setup");
+		menuBar.add(fixMenu);
+
+		for (String group : KeyboardEventMap.manualFixes.keySet()) {
+			List<ApplyKbFixAction> fixes = KeyboardEventMap.manualFixes.get(group);
+			if ("".equals(group) || fixes.size() == 1) { // checkboxes
+				for (ApplyKbFixAction action : fixes) {
+					JCheckBoxMenuItem item = new JCheckBoxMenuItem(action);
+					item.setSelected(action.isApplied());
+					fixMenu.add(item);
+				}
+			} else {
+				ButtonGroup bg = new ButtonGroup();
+				JRadioButtonMenuItem item = new JRadioButtonMenuItem("-- " + group + " --", true);
+				fixMenu.add(item);
+				bg.add(item);
+				for (ApplyKbFixAction action : fixes) {
+					item = new JRadioButtonMenuItem(action);
+					item.addChangeListener(action);
+					fixMenu.add(item);
+					bg.add(item);
+					bg.setSelected(item.getModel(), action.isApplied());
+				}
+			}
+			fixMenu.add(new JSeparator());
+		}
+
+		sendKeysMenu = new JMenu("Send key");
+		sendKeysMenu.setEnabled(false); //set in Options if input is enabled
+		menuBar.add(sendKeysMenu);
+		sendKeysMenu.add(menuItem("Ctrl+Alt+Del", "sendKey", new KeyEntry("VK_DELETE+ALT+CTRL")));
+		sendKeysMenu.add(menuItem("Ctrl+Escape", "sendKey", new KeyEntry("VK_ESCAPE+CTRL")));
+		sendKeysMenu.add(menuItem("Ctrl+Alt+BkSpace", "sendKey", new KeyEntry("VK_BACK_SPACE+ALT+CTRL")));
+		sendKeysMenu.add(menuItem("Ctrl+Alt+F1", "sendKey", new KeyEntry("VK_F1+ALT+CTRL")));
+		sendKeysMenu.add(menuItem("Ctrl+Alt+F7", "sendKey", new KeyEntry("VK_F7+ALT+CTRL")));
+		sendKeysMenu.add(menuItem("releaseAll", "sendKey", new KeyEntry("VK_SHIFT+ALT+CTRL+ALT_GRAPH")));
+		return menuBar;
+	}
+
+	private JButton button(String label, String action, Object... args) {
+		JButton btn = new JButton(label);
+		try {
+			btn.addActionListener(new InvokeAction(this, action, args));
+		} catch (NoSuchMethodException ex) {
+			logger.error("Unable to register " + action + " action", ex);
+		}
+		return btn;
+	}
+
+	private JMenuItem menuItem(String label, String action, Object... args) {
+		JMenuItem item = new JMenuItem(label);
+		try {
+			item.addActionListener(new InvokeAction(this, action, args));
+		} catch (NoSuchMethodException ex) {
+			logger.error("Unable to register " + action + " action", ex);
+		}
+		return item;
+	}
+
 	public void update(Graphics g) {}
 
-        public void requestFocus () {
+	public void requestFocus () {
 		if (vncFrame == null) {
 			initFrame();
 		} else {
@@ -281,36 +277,41 @@ public class VncViewer implements java.lang.Runnable,
 		moveFocusToDesktop();
 	}
 	
-	public void toggleOptions () {
-            options.setVisible(!options.isVisible());
-        }
-        
-        public void refresh () {
-            if (rfb != null && !rfb.closed()) try {
-                rfb.writeFramebufferUpdateRequest(0, 0, rfb.server.fb_width, rfb.server.fb_height, false);
-            } catch (IOException ex) {
-                logger.error("Exception sending refresh request", ex);
-            }
-        }
-        
-        public void sendKey (KeyEntry key) {
-            if (rfb != null && !rfb.closed()) try {
-                if (KeyboardEvent.extended_key_event) {
-                    for (KeyboardEventMap.EvtEntry evt : key.getExtendedWriteEvents())
-                        rfb.writeKeyboardEvent(evt.key.keysym, evt.key.keycode, evt.evtId == KeyEvent.KEY_PRESSED);
-                } else {
-                    int mask = key.getModifierMask();
-                    rfb.writeKeyboardEvent(new KeyEvent(vncContainer, KeyEvent.KEY_PRESSED, 0, 
-                        mask , key.keycode, (char) key.keysym));
-                    rfb.writeKeyboardEvent(new KeyEvent(vncContainer, KeyEvent.KEY_RELEASED, 0, 
-                        mask , key.keycode, (char) key.keysym));
-                }
+	public void toggleOptions() {
+		options.setVisible(!options.isVisible());
+	}
 
-            } catch (Exception ex) {
-                logger.error("Exception sending ctrlAltDel", ex);
-            }
-        }
-        
+	public void refresh() {
+		if (rfb != null && !rfb.closed()) {
+			try {
+				rfb.writeFramebufferUpdateRequest(0, 0, rfb.server.fb_width, rfb.server.fb_height, false);
+			} catch (IOException ex) {
+				logger.error("Exception sending refresh request", ex);
+			}
+		}
+	}
+
+	public void sendKey(KeyEntry key) {
+		if (rfb != null && !rfb.closed()) {
+			try {
+				if (KeyboardEvent.extended_key_event) {
+					for (KeyboardEventMap.EvtEntry evt : key.getExtendedWriteEvents()) {
+						rfb.writeKeyboardEvent(evt.key.keysym, evt.key.keycode, evt.evtId == KeyEvent.KEY_PRESSED);
+					}
+				} else {
+					int mask = key.getModifierMask();
+					rfb.writeKeyboardEvent(new KeyEvent(vncContainer, KeyEvent.KEY_PRESSED, 0,
+							mask, key.keycode, (char) key.keysym));
+					rfb.writeKeyboardEvent(new KeyEvent(vncContainer, KeyEvent.KEY_RELEASED, 0,
+							mask, key.keycode, (char) key.keysym));
+				}
+
+			} catch (Exception ex) {
+				logger.error("Exception sending ctrlAltDel", ex);
+			}
+		}
+	}
+
 	//
 	// run() - executed by the rfbThread to deal with the RFB socket.
 	//
@@ -319,7 +320,7 @@ public class VncViewer implements java.lang.Runnable,
 		try {
 			connectAndAuthenticate();
 			doProtocolInitialisation();
-                        options.updateState();
+			options.updateState();
 			createCanvas(0, 0);
 
 			// Create a panel which itself is resizeable and can hold
@@ -334,7 +335,7 @@ public class VncViewer implements java.lang.Runnable,
 			}
 
 			// Finally, add our panel to the Frame window.
-                        setTitle(windowTitle);
+			setTitle(windowTitle);
 			pack();
 
 			moveFocusToDesktop();
@@ -420,7 +421,7 @@ public class VncViewer implements java.lang.Runnable,
 		catch (Exception e) {
 			if (rfbThread == null) {
 				logger.info("Ignoring RFB socket exceptions"
-						+ " because applet is stopping");
+						+ " because vncViewer is stopping");
 			} else {
 				throw e;
 			}
@@ -434,8 +435,8 @@ public class VncViewer implements java.lang.Runnable,
 	void connectAndAuthenticate() throws Exception {
 		showConnectionStatus("Initializing...");
 		
-                pack();
-                show();
+		pack();
+		show();
 
 		showConnectionStatus("Connecting to " + host + ", port " + port + "...");
 
@@ -566,7 +567,7 @@ public class VncViewer implements java.lang.Runnable,
 		AuthPanel authPanel = new AuthPanel(this, false);
 		vncContainer.add(authPanel);
 		
-                pack();
+		pack();
 
 		authPanel.moveFocusToDefaultField();
 		String pw = authPanel.getPassword();
@@ -835,7 +836,7 @@ public class VncViewer implements java.lang.Runnable,
 	}
 
 	public String readParameter(String name, boolean required) {
-		logger.info("read parameter " + name);
+		logger.info("read parameter " + name + this);
 
 		for (int i = 0; i < mainArgs.length; i += 2) {
 			if (mainArgs[i].equalsIgnoreCase(name)) {
@@ -914,35 +915,35 @@ public class VncViewer implements java.lang.Runnable,
 						+ vncCanvas.statNumBytesEncoded + " compressed, ratio "
 						+ ratio);
 			}
-                        canvasPanel.remove(vncCanvas);
-                        vncContainer.remove(vncCanvas);
-                        vncCanvas = null;
+			canvasPanel.remove(vncCanvas);
+			vncContainer.remove(vncCanvas);
+			vncCanvas = null;
 		}
-                
-                vncContainer.remove(canvasPanel);
-                vncContainer.removeAll();
-                vncContainer.setLayout(containerDefaultLayout);
-                canvasPanel = new Panel();
-                vncContainer.add(canvasPanel);
-                
+		vncContainer.remove(canvasPanel);
+		vncContainer.removeAll();
+		vncContainer.setLayout(containerDefaultLayout);
+		canvasPanel = new Panel();
+		vncContainer.add(canvasPanel);
+
 		if (rfb != null && !rfb.closed())
 			rfb.close();
 	}
 
-        synchronized public void connect() {
-                if (rfbThread != null && ! rfbThread.isInterrupted())
-                    rfbThread.interrupt();
+	synchronized public void connect() {
+		if (rfbThread != null && ! rfbThread.isInterrupted())
+				rfbThread.interrupt();
 		rfbThread = new Thread(this);
 		rfbThread.start();
-        }
+	}
 
-        synchronized public void close() {
-            disconnect();
-            destroy();
-
-        }
-        
-        //
+	synchronized public void close() {
+		destroy();
+		if (inAnApplet && !separateWindow) {
+			applet.evalJs("window.close()");
+		}
+	}
+    
+	//
 	// fatalError() - print out a fatal error message.
 	// FIXME: Do we really need two versions of the fatalError() method?
 	//
@@ -992,50 +993,46 @@ public class VncViewer implements java.lang.Runnable,
 			vncContainer.setLayout(new FlowLayout(FlowLayout.LEFT, 30, 30));
 			vncContainer.add(errLabel);
 		}
-                pack();
+		pack();
 		
 	}
 
-	//
-	// Stop the applet.
-	// Main applet thread will terminate on first exception
-	// after seeing that rfbThread has been set to null.
-	//
-
 	public void stop() {
-		logger.info("Stopping applet");
-		rfbThread = null;
+		logger.info("Stopping vncViewer");
 	}
 
+	public void start () {
+		logger.info("Starting vncViewer");
+        
+	}
+    
+       
 	//
-	// This method is called before the applet is destroyed.
+	// This method is called before the vncViewer is destroyed.
 	//
 
 	public void destroy() {
-		logger.info("Destroying applet");
-		if(vncContainer != null){
-			vncContainer.removeAll();
-		}
-		if (rfb != null){
+		logger.info("Destroying vncViewer");
+		if (rfb != null) {
 			disconnect();
 		}
+		if (vncContainer != null) {
+			vncContainer.removeAll();
+		}
 		if (inAnApplet) {
-//			VncEventPublisher.publish(VncEvent.DESTROY, "destroyed");
-//			if(VncViewer.applet != null){
-//				VncViewer.applet.destroy();
-//			}
-			
+			VncEventPublisher.publish(VncEvent.DESTROY, "destroyed");
 			showMessage("Disconnected");
 		} else {
-                        if(vncFrame != null){
-                                vncFrame.dispose();			
-                        }
-                        if(options != null){			
-                                options.dispose();
-                                options=null;
-                        }
+			if (vncFrame != null) {
+				vncFrame.dispose();
+			}
+			if (options != null) {
+				options.dispose();
+				options = null;
+			}
 			System.exit(0);
 		}
+		logger.info("vncViewer destroyed");
 	}
 
 	//

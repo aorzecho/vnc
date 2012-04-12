@@ -315,18 +315,16 @@ public class RfbProto {
 		initCapabilities();
 	}
 	
-	public void writeKeyboardEvent(KeyEvent evt) throws IOException, KeyUndefinedException{
-            byte[] buf = new KeyboardEvent(evt).getBytes(); 
-            os.write(buf);
-            logger.debug("writeKeyboardEvent " + evt + "  bytes:" + Arrays.toString(buf));
+	public void writeKeyboardEvent(KeyEvent evt) throws IOException, KeyUndefinedException {
+		KeyboardEvent kevent = new KeyboardEvent(evt);
+		os.write(kevent.getBytes());
+		logger.debug("writeKeyboardEvent " + kevent + "  bytes:" + Arrays.toString(kevent.getBytes()));
 	}
 	
-	public void writeKeyboardEvent(int keysym, int keycode, boolean press) throws IOException{
-            byte[] buf = new KeyboardEvent(keysym, keycode, press).getBytes();
-		os.write(buf);
-            logger.debug("writeKeyboardEvent " 
-                    + keysym + "/" + keycode + "/" + press
-                    + "  bytes:" + Arrays.toString(buf));
+	public void writeKeyboardEvent(int keysym, int keycode, boolean press) throws IOException {
+		KeyboardEvent kevent = new KeyboardEvent(keysym, keycode, press);
+		os.write(kevent.getBytes());
+		logger.debug("writeKeyboardEvent " + kevent + "  bytes:" + Arrays.toString(kevent.getBytes()));
 	}
 	
 	public void writePointerEvent(MouseEvent evt) throws IOException {

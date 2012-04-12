@@ -104,7 +104,7 @@ public class CanvasKeyListener implements KeyListener {
 	// Handle events.
 	//
 	@Override
-	public synchronized void keyPressed(KeyEvent evt) {
+	public void keyPressed(KeyEvent evt) {
 		logger.debug("KeyReleased: char: " + evt.getKeyChar() 
 			+ " code: " + evt.getKeyCode()
 			+ " modifiers: " + KeyEvent.getKeyModifiersText(evt.getModifiers()));
@@ -120,7 +120,7 @@ public class CanvasKeyListener implements KeyListener {
 	}
 
 	@Override
-	public synchronized void keyReleased(KeyEvent evt) {
+	public void keyReleased(KeyEvent evt) {
 		logger.debug("KeyReleased: char: " + evt.getKeyChar() 
 			+ " code: " + evt.getKeyCode()
 			+ " modifiers: " + KeyEvent.getKeyModifiersText(evt.getModifiers()));
@@ -140,7 +140,7 @@ public class CanvasKeyListener implements KeyListener {
 	// the keycode is 0 (unknown!)
 	// but on only keyTyped events.
 	// we write them here!
-	public synchronized void keyTyped(KeyEvent evt) {
+	public void keyTyped(KeyEvent evt) {
 		logger.debug("KeyTyped: char: " + evt.getKeyChar() + " code: " + evt.getKeyCode());
 		if (Util.isWin()) {
 			char keychar = evt.getKeyChar();

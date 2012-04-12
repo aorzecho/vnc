@@ -105,6 +105,8 @@ public class VncCanvas extends Canvas implements MouseListener, MouseWheelListen
 	TightDecoder tightDecoder;
 	CopyRectDecoder copyRectDecoder;
 
+	private final Thread mouseThread;
+	
 	// Base decoder decoders array
 	RawDecoder[] decoders = null;
 
@@ -212,7 +214,8 @@ public class VncCanvas extends Canvas implements MouseListener, MouseWheelListen
 
 		// Create thread, that will send mouse movement events
 		// to VNC server.
-		Thread mouseThread = new Thread(this);
+		mouseThread = new Thread(this);
+		mouseThread.setDaemon(true);
 		mouseThread.start();
 	}
 
@@ -402,7 +405,7 @@ public class VncCanvas extends Canvas implements MouseListener, MouseWheelListen
 			// main dispatch loop
 			//
 
-			while (true) {
+			while (!Thread.currentThread().isInterrupted()) {
 
 				// Read message type from the server.
 				int msgType = rfb.readServerMessageType();
@@ -526,6 +529,7 @@ public class VncCanvas extends Canvas implements MouseListener, MouseWheelListen
 							try {
 								rfb.wait(viewer.deferUpdateRequests);
 							} catch (InterruptedException e) {
+								Thread.currentThread().interrupt();
 							}
 						}
 					}
@@ -613,6 +617,8 @@ public class VncCanvas extends Canvas implements MouseListener, MouseWheelListen
 		} catch (EOFException e) {
 			logger.info("Stream closed (EOF), closing ...");
 			viewer.destroy();
+		} finally {
+			mouseThread.interrupt();
 		}
 	}
 
@@ -751,13 +757,14 @@ public class VncCanvas extends Canvas implements MouseListener, MouseWheelListen
 	}
 
 	public void run() {
-		while (true) {
+		while (!Thread.currentThread().isInterrupted()) {
 			// Send mouse movement if we have it
 			trySendPointerEvent();
 			// Sleep for some time
 			try {
 				Thread.sleep(1000 / mouseMaxFreq);
 			} catch (InterruptedException ex) {
+				Thread.currentThread().interrupt();
 			}
 		}
 	}
