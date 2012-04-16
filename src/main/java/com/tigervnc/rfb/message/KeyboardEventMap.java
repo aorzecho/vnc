@@ -136,6 +136,7 @@ public class KeyboardEventMap {
 
 	public static List<EvtEntry> remapEvent(KeyEvent evt) {
 		EvtEntry entry = new EvtEntry(evt);
+		logger.debug(entry);
 		for (KbFix fix : fixes) {
 			List<EvtEntry> remappedEvt = fix.eventRemap.get(entry);
 			if (remappedEvt != null) {
@@ -167,7 +168,7 @@ public class KeyboardEventMap {
 			new KeyEntry(evt.getKeyCode(), evt.getKeyChar(), 0),
 			new KeyEntry(evt.getKeyCode(), KeyEvent.CHAR_UNDEFINED, 0)
 		};
-
+		logger.debug(searchKeys[0]);
 		for (KeyEntry key : searchKeys) {
 			for (KbFix fix : fixes) {
 				KeyEntry remappedKey = fix.codeRemap.get(key);

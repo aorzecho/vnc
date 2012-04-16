@@ -137,18 +137,6 @@ public class CanvasKeyListener implements KeyListener {
 	// we write them here!
 	public void keyTyped(KeyEvent evt) {
 		logger.debug(evt);
-		if (Util.isWin()) {
-			char keychar = evt.getKeyChar();
-			try {
-				if (KeyboardEvent.char2vk.containsKey(keychar)) {
-					int vk = KeyboardEvent.char2vk.get(keychar);
-					rfb.writeKeyboardEvent(keychar, vk, true);
-					rfb.writeKeyboardEvent(keychar, vk, false);
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
 		process(evt);
 	}
 	

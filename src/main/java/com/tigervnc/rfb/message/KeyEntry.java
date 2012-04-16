@@ -117,13 +117,13 @@ public final class KeyEntry {
 
 	@Override
 	public String toString() {
-		return String.format("%s(x%h/%d)|%s(x%h/%d)%s%s%s%s%s", new Object[] {
+		return String.format("%s(x%h/%d)|%d(x%h/%s)%s%s%s%s%s", new Object[] {
 			keyCodeToString(keycode),
 			keycode,
 			keycode,
+			keysym,
+			keysym,
 			(char)keysym,
-			keysym,
-			keysym,
 			alt ?	"+ALT" : "",
 			altGr ?	"+ALT_GRAPH" : "",
 			ctrl ?	"+CTRL" : "",

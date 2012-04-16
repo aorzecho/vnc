@@ -21,16 +21,6 @@ public class KeyboardEvent implements IServerMessage {
 	
 	private static Logger logger = Logger.getLogger(KeyboardEvent.class);
 	
-	public static final Map<Character, Integer> char2vk = new HashMap<Character, Integer>();
-	static {
-		char2vk.put('æ', KeyEvent.VK_SEMICOLON);
-		char2vk.put('ø', KeyEvent.VK_QUOTE);
-		char2vk.put('å', KeyEvent.VK_OPEN_BRACKET);
-		char2vk.put('Æ', KeyEvent.VK_SEMICOLON);
-		char2vk.put('Ø', KeyEvent.VK_QUOTE);
-		char2vk.put('Å', KeyEvent.VK_OPEN_BRACKET);
-	}
-	
 	public class KeyUndefinedException extends Exception {
 		public KeyUndefinedException (String msg){
 			super(msg);
@@ -174,14 +164,6 @@ public class KeyboardEvent implements IServerMessage {
 			addExtraEvent(new KeyboardEvent(X11_ALT, KeyEvent.VK_ALT, _press));
 			addExtraEvent(new KeyboardEvent(X11_DELETE, KeyEvent.VK_DELETE, _press));
 			break;
-//		case KeyEvent.VK_BACK_QUOTE:
-//			// alt-tab is mapped to alt-`
-//			if(evt.isAltDown()){
-//				bypass_original_event = true;
-//				KeyboardEvent tab = new KeyboardEvent(X11_TAB, KeyEvent.VK_TAB, _press);
-//				addExtraEvent(tab);
-//			}
-//			break;
 		}
 	}
 
@@ -289,57 +271,6 @@ public class KeyboardEvent implements IServerMessage {
 	}
 	
 	protected void handleLinuxPecularities() throws KeyUndefinedException{
-		// WTF: presseing æøå only produces keyRelease
-		// and the keycodes are undefined for these.
-		
-//		if (_keycode == KeyEvent.VK_UNDEFINED) {
-//			// Write the missing event here
-//			if(!_press && char2vk.containsKey((char)_keysym)){
-//				
-//				int vk = KeyboardEvent.char2vk.get((char)_keysym);
-//				addExtraEvent(new KeyboardEvent(_keysym, vk, true));
-//				addExtraEvent(new KeyboardEvent(_keysym, vk, false));
-//				bypass_original_event = true;
-//			}
-//                        else if (!extended_key_event || KeyboardEventMap.java2rfb(_keycode)==null) {
-//				throw new KeyUndefinedException((char)_keysym + " doesn't have a keycode!");								
-//			}
-//		}
-//		// still only key release
-//		else if(_keycode == KeyEvent.VK_DEAD_DIAERESIS){
-//			// e.g. öïë
-//			if(!_press){
-//				addExtraEvent(new KeyboardEvent(']', KeyEvent.VK_CLOSE_BRACKET, true));
-//				addExtraEvent(new KeyboardEvent(']', KeyEvent.VK_CLOSE_BRACKET, false));
-//				bypass_original_event = true;
-//			}
-//		}
-//		
-		// special case for danish keyboards ...
-		
-		// I don't know how to switch on the language layout of the keyboard:(
-		// The following code ruins it for english layouts...
-		
-		// A side note, have tried to force a specific locale upon the VncViewer
-		// has no effect...
-		
-//		else if(_keycode == KeyEvent.VK_QUOTE && _keysym == '\\'){
-//			// 222 = 0xde = VK_QUOTE
-//			_keycode = KeyEvent.VK_BACK_SLASH; 
-//			_keysym = '\\';	
-//		}
-//		
-//		else if(_keycode == KeyEvent.VK_QUOTE && _keysym == '\''){
-//			// 222 = 0xde = VK_QUOTE
-//			_keycode = KeyEvent.VK_BACK_SLASH; 
-//			_keysym = '\\';	
-//		}
-//		
-//		else if(_keycode == KeyEvent.VK_QUOTE && _keysym == '*'){
-//			// 222 = 0xde = VK_QUOTE
-//			_keycode = KeyEvent.VK_BACK_SLASH; 
-//			_keysym = '\\';	
-//		}
 	}
 	
 	private void handleMacPecularities(KeyEvent evt){
