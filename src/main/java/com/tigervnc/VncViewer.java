@@ -71,14 +71,12 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.*;
+import org.apache.log4j.LogManager;
 
 public class VncViewer implements java.lang.Runnable,
 		WindowListener, ComponentListener {
 
 	public static Logger logger = Logger.getLogger(VncViewer.class);
-	static{
-		logger.setLevel(Level.INFO);
-	}
 	public static boolean inAnApplet = true;
 	public static VncApplet applet;
 
@@ -239,7 +237,7 @@ public class VncViewer implements java.lang.Runnable,
 		sendKeysMenu.add(menuItem("Ctrl+Alt+BkSpace", "sendKey", new KeyEntry("VK_BACK_SPACE+ALT+CTRL")));
 		sendKeysMenu.add(menuItem("Ctrl+Alt+F1", "sendKey", new KeyEntry("VK_F1+ALT+CTRL")));
 		sendKeysMenu.add(menuItem("Ctrl+Alt+F7", "sendKey", new KeyEntry("VK_F7+ALT+CTRL")));
-		sendKeysMenu.add(menuItem("releaseAll", "sendKey", new KeyEntry("VK_SHIFT+ALT+CTRL+ALT_GRAPH")));
+		sendKeysMenu.add(menuItem("release modifier keys", "sendKey", new KeyEntry("VK_SHIFT+ALT+CTRL+ALT_GRAPH")));
 		return menuBar;
 	}
 
@@ -272,7 +270,6 @@ public class VncViewer implements java.lang.Runnable,
 			vncFrame.setState(Frame.NORMAL);
 			vncFrame.toFront();
 			vncFrame.requestFocus();
-			logger.info("requestFocus: vncFrame!=null ");
 		}
 		moveFocusToDesktop();
 	}
@@ -729,23 +726,23 @@ public class VncViewer implements java.lang.Runnable,
 		switch (log_level.charAt(0)) {
 		case 'd':
 		case 'D':
-			logger.setLevel(Level.DEBUG);
+			LogManager.getRootLogger().setLevel(Level.DEBUG);
 			break;
 		case 'i':
 		case 'I':
-			logger.setLevel(Level.INFO);
+			LogManager.getRootLogger().setLevel(Level.INFO);
 			break;
 		case 'w':
 		case 'W':
-			logger.setLevel(Level.WARN);
+			LogManager.getRootLogger().setLevel(Level.WARN);
 			break;
 		case 'e':
 		case 'E':
-			logger.setLevel(Level.ERROR);
+			LogManager.getRootLogger().setLevel(Level.ERROR);
 			break;
 		case 'f':
 		case 'F':
-			logger.setLevel(Level.FATAL);
+			LogManager.getRootLogger().setLevel(Level.FATAL);
 			break;
 		default:
 			System.err.println(": Invalid debug level: "
@@ -836,8 +833,6 @@ public class VncViewer implements java.lang.Runnable,
 	}
 
 	public String readParameter(String name, boolean required) {
-		logger.info("read parameter " + name + this);
-
 		for (int i = 0; i < mainArgs.length; i += 2) {
 			if (mainArgs[i].equalsIgnoreCase(name)) {
 				try {
@@ -998,11 +993,11 @@ public class VncViewer implements java.lang.Runnable,
 	}
 
 	public void stop() {
-		logger.info("Stopping vncViewer");
+		logger.debug("Stopping vncViewer");
 	}
 
 	public void start () {
-		logger.info("Starting vncViewer");
+		logger.debug("Starting vncViewer");
         
 	}
     
@@ -1078,7 +1073,7 @@ public class VncViewer implements java.lang.Runnable,
 
 	@Override
 	public void windowClosing(WindowEvent evt) {
-		logger.info("windowClosing");
+		logger.debug("windowClosing");
 		destroy();
 		if (inAnApplet && separateWindow) {
 			if(vncFrame != null){
@@ -1095,7 +1090,7 @@ public class VncViewer implements java.lang.Runnable,
 	
 	@Override
 	public void windowClosed(WindowEvent evt) {
-		logger.info("windowClosed");
+		logger.debug("windowClosed");
 	}
 
 	//
@@ -1103,7 +1098,7 @@ public class VncViewer implements java.lang.Runnable,
 	//
 
 	public void windowActivated(WindowEvent evt) {
-		logger.info("windowActivated");
+		logger.debug("windowActivated");
 	}
 	
 	public void relaseAllKeys(){
@@ -1117,31 +1112,21 @@ public class VncViewer implements java.lang.Runnable,
 	}
 
 	public void windowDeactivated(WindowEvent evt) {
-		logger.info("windowDeactived");
+		logger.debug("windowDeactived");
 		relaseAllKeys();
 	}
 
 	public void windowOpened(WindowEvent evt) {
-		logger.info("windowOpened");
+		logger.debug("windowOpened");
 	}
 
 	public void windowIconified(WindowEvent evt) {
-		logger.info("windowIconified");
+		logger.debug("windowIconified");
 		relaseAllKeys();
 	}
 
 	public void windowDeiconified(WindowEvent evt) {
-		logger.info("windowDeiconified");
+		logger.debug("windowDeiconified");
 	}
 
-//    @Override
-//    public void focusGained(FocusEvent e) {
-//		logger.info("focusGained");
-//    }
-//
-//    @Override
-//    public void focusLost(FocusEvent e) {
-//		logger.info("focusLost");
-//		relaseAllKeys();
-//    }
 }

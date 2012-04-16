@@ -410,10 +410,14 @@ public class KeyboardEvent implements IServerMessage {
 	}
 
 	public String toString(){
-		return (extended_key_event ? "extended" : "simple ")
-				 + "key event, keysym: " + _keysym + " keychar: '" + (char)_keysym + "'"
-				 + " keycode: " + _keycode
-				 + (_press ? " press" : " release");
+		return String.format("%s key event, keysym:%d keychar:'%s' keycode:%d(%s) %s", new Object[] {
+			extended_key_event ? "extended" : "simple ",
+			_keysym,
+			(char) _keysym,
+			_keycode,
+			KeyEntry.keyCodeToString(_keycode),
+			_press ? " press" : " release"
+		});
 	}
 
 	protected List<KeyboardEvent> getAdditionalEvents() {

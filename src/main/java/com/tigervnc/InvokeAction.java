@@ -7,8 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -19,6 +18,7 @@ public class InvokeAction implements ActionListener {
     private final Method method;
     private final Object obj;
     private final Object[] args;
+	public static Logger logger = Logger.getLogger(InvokeAction.class);
     
     public InvokeAction (Class clazz, String methodName, Object ... args) throws NoSuchMethodException {
         Class[] paramTypes = new Class[args.length];
@@ -44,7 +44,7 @@ public class InvokeAction implements ActionListener {
         try {
             method.invoke(obj, args);
         } catch (Exception ex) {
-            Logger.getLogger(InvokeAction.class.getName()).log(Level.SEVERE, "Exception performing invoke action", ex);
+            logger.error("Exception performing invoke action", ex);
         }
     }
 }

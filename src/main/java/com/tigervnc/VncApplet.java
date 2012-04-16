@@ -15,11 +15,12 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.logging.Level;
 import javax.swing.JApplet;
 import org.apache.log4j.Logger;
 
 public class VncApplet extends JApplet {
+
+	private static Logger logger = Logger.getLogger(VncApplet.class);
 
 	private String window_title;
 	private String port;
@@ -56,7 +57,7 @@ public class VncApplet extends JApplet {
 					}
 				}
 			} catch (Exception e) {
-				System.out.println("Exception while initializing JsExecutor " + e);
+				logger.error("Exception while initializing JsExecutor " + e);
 			}
 		}
 		
@@ -70,18 +71,15 @@ public class VncApplet extends JApplet {
 			while (!Thread.currentThread().isInterrupted()) {
 				try {
 					String script = scriptQueue.take();
-					System.out.println("calling javascript: " + script);
-					applet.getAppletContext().showDocument(new URL("javascript:" + script));
-//					synchronized (jsObjClazz) {
-//						evalMethod.invoke(getWindowMethod.invoke(null, applet), "javascript: " + script);
-//					}
-					System.out.println("executed javascript: " + script);
+					logger.debug("calling javascript: " + script);
+					synchronized (jsObjClazz) {// hangs after several calls (icedtea plugin)
+						evalMethod.invoke(getWindowMethod.invoke(null, applet), "javascript: " + script);
+					}
+					logger.debug("executed javascript: " + script);
 				} catch (InterruptedException ex) {
 					break;
-//				} catch (InvocationTargetException ex) {
-//					break;
 				} catch (Exception e) {
-					System.out.println("Got exception while performing javascript call " + e);
+					logger.error("Got exception while performing javascript call", e);
 				}
 			}
 		}

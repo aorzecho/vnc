@@ -68,6 +68,7 @@ import com.tigervnc.decoder.common.Repaintable;
 import com.tigervnc.rfb.Encodings;
 import com.tigervnc.rfb.RfbInputStream;
 import com.tigervnc.rfb.RfbProto;
+import com.tigervnc.rfb.message.KeyEntry;
 import com.tigervnc.rfb.message.KeyboardEvent;
 import com.tigervnc.rfb.message.KeyboardEvent.KeyUndefinedException;
 

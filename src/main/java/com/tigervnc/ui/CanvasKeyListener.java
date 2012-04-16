@@ -15,7 +15,6 @@ import com.tigervnc.rfb.message.KeyboardEvent;
 import com.tigervnc.rfb.message.KeyboardEvent.KeyUndefinedException;
 import com.tigervnc.rfb.message.KeyboardEventMap;
 import java.util.*;
-import java.util.logging.Level;
 import static java.awt.event.KeyEvent.*;
 
 public class CanvasKeyListener implements KeyListener {
@@ -105,9 +104,7 @@ public class CanvasKeyListener implements KeyListener {
 	//
 	@Override
 	public void keyPressed(KeyEvent evt) {
-		logger.debug("KeyReleased: char: " + evt.getKeyChar() 
-			+ " code: " + evt.getKeyCode()
-			+ " modifiers: " + KeyEvent.getKeyModifiersText(evt.getModifiers()));
+		logger.debug(evt);
 		if (evt.getKeyCode() != KeyEvent.VK_UNDEFINED)
 			pressed.add(evt.getKeyCode());
 		
@@ -121,9 +118,7 @@ public class CanvasKeyListener implements KeyListener {
 
 	@Override
 	public void keyReleased(KeyEvent evt) {
-		logger.debug("KeyReleased: char: " + evt.getKeyChar() 
-			+ " code: " + evt.getKeyCode()
-			+ " modifiers: " + KeyEvent.getKeyModifiersText(evt.getModifiers()));
+		logger.debug(evt);
 		if (evt.getKeyCode() != KeyEvent.VK_UNDEFINED && !pressed.remove(evt.getKeyCode())) {
 			//missing press event, process fake one
 			logger.info("sending missing press event for " + evt);
@@ -141,7 +136,7 @@ public class CanvasKeyListener implements KeyListener {
 	// but on only keyTyped events.
 	// we write them here!
 	public void keyTyped(KeyEvent evt) {
-		logger.debug("KeyTyped: char: " + evt.getKeyChar() + " code: " + evt.getKeyCode());
+		logger.debug(evt);
 		if (Util.isWin()) {
 			char keychar = evt.getKeyChar();
 			try {
@@ -155,7 +150,6 @@ public class CanvasKeyListener implements KeyListener {
 			}
 		}
 		process(evt);
-//		evt.consume();
 	}
 	
 }
