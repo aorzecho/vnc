@@ -42,7 +42,8 @@ public class KeyboardEventTest {
 		// keysym
 		Assert.assertEquals(1, ByteBuffer.wrap(new byte[]{key_ev[4], key_ev[5], key_ev[6], key_ev[7]}).asIntBuffer().get());
 		// keycode
-		Assert.assertEquals(KeyboardEventMap.java2rfb[KeyEvent.VK_1], ByteBuffer.wrap(new byte[]{key_ev[8], key_ev[9], key_ev[10], key_ev[11]}).asIntBuffer().get());
+		Assert.assertEquals(KeyboardEventMap.java2rfb(KeyEvent.VK_1).intValue(),
+				ByteBuffer.wrap(new byte[]{key_ev[8], key_ev[9], key_ev[10], key_ev[11]}).asIntBuffer().get());
 	}
 	
 	@Test

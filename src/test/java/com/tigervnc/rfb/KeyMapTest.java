@@ -14,7 +14,7 @@ public class KeyMapTest {
 
 	@Test
 	public void test_java2rfb(){
-		Assert.assertEquals(0x1e, KeyboardEventMap.java2rfb[KeyEvent.VK_A]);
-		Assert.assertEquals(0xcd, KeyboardEventMap.java2rfb[KeyEvent.VK_RIGHT]);
+		Assert.assertEquals(0x1e, KeyboardEventMap.java2rfb(KeyEvent.VK_A).intValue());
+		Assert.assertEquals(0xcd, KeyboardEventMap.java2rfb(KeyEvent.VK_RIGHT).intValue());
 	}
 }
