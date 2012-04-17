@@ -1,6 +1,8 @@
 package com.tigervnc.rfb.message;
 
 import com.tigervnc.Util;
+import com.tigervnc.VncEvent;
+import com.tigervnc.VncEventPublisher;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.*;
@@ -76,11 +78,12 @@ public class KeyboardEventMap {
 
 		final boolean optional;
 		final String group;
+		final String id;
 		final Integer priority;
 		final Map<EvtEntry, List<EvtEntry>> eventRemap;
 		final Map<KeyEntry, KeyEntry> codeRemap;
 
-		public KbFix(Map<String, String> params, Map<KeyEntry, KeyEntry> codeRemap, Map<EvtEntry, List<EvtEntry>> eventRemap) {
+		public KbFix(String id, Map<String, String> params, Map<KeyEntry, KeyEntry> codeRemap, Map<EvtEntry, List<EvtEntry>> eventRemap) {
 			this.optional = Boolean.valueOf(params.get("optional"));
 			String prS = params.get("priority");
 			if (prS != null) {
@@ -91,7 +94,7 @@ public class KeyboardEventMap {
 			this.group = params.get("group") == null ? "" : params.get("group");
 			this.eventRemap = eventRemap;
 			this.codeRemap = codeRemap;
-
+			this.id = id;
 		}
 
 		@Override
@@ -125,8 +128,8 @@ public class KeyboardEventMap {
 	public static final Logger logger = Logger.getLogger(KeyboardEventMap.class);
 	private static final Pattern CSV_SPLIT_PATTERN = Pattern.compile("\\s*,\\s*");
 	private static final Map<Integer, Integer> javaCode2rfb = new HashMap<Integer, Integer>(512);
-	private static final SortedSet<KbFix> fixes = new TreeSet<KbFix>();
-	public static final Map<String, List<ApplyKbFixAction>> manualFixes = new HashMap<String, List<ApplyKbFixAction>>();
+	private final SortedSet<KbFix> fixes = Collections.synchronizedSortedSet(new TreeSet<KbFix>());
+	public final Map<String, List<ApplyKbFixAction>> manualFixes = new HashMap<String, List<ApplyKbFixAction>>();
 	public static final String CURRENT_OS;
 
 // ===================== mapping methods ===============================
@@ -134,7 +137,7 @@ public class KeyboardEventMap {
 		return javaCode2rfb.get(keycode);
 	}
 
-	public static List<EvtEntry> remapEvent(KeyEvent evt) {
+	public List<EvtEntry> remapEvent(KeyEvent evt) {
 		EvtEntry entry = new EvtEntry(evt);
 		logger.debug(entry);
 		for (KbFix fix : fixes) {
@@ -161,7 +164,7 @@ public class KeyboardEventMap {
 		return null;
 	}
 
-	public static KeyEntry remapCodes(KeyEvent evt) {
+	public KeyEntry remapCodes(KeyEvent evt) {
 		KeyEntry[] searchKeys = new KeyEntry[] {// try exact match first (keycode+char+modifiers), keycode only at last
 			new KeyEntry(evt),
 			new KeyEntry(evt.getKeyCode(), KeyEvent.CHAR_UNDEFINED, evt.getModifiersEx()),
@@ -186,18 +189,38 @@ public class KeyboardEventMap {
 	}
 
 //============  enable/disable fixes =========================    
-	public static void applyFix(KbFix fix) {
-		fixes.add(fix);
+	public synchronized void applyFix(KbFix fix) {
+		if (fixes.add(fix) && instance != null) { //initialized
+			VncEventPublisher.publish(VncEvent.UPD_SETUP, getSetup());
+		}
 	}
 
-	public static void unapplyFix(KbFix fix) {
-		fixes.remove(fix);
+	public synchronized void unapplyFix(KbFix fix) {
+		if (fixes.remove(fix) && instance != null) { //initialized
+			VncEventPublisher.publish(VncEvent.UPD_SETUP, getSetup());
+		}
 	}
 
-	public static boolean isApplied(KbFix fix) {
+	public boolean isApplied(KbFix fix) {
 		return fixes.contains(fix);
 	}
 
+//============  current state of applied fixes as a string =======    
+	public String getSetup () {
+		StringBuffer buf = new StringBuffer();
+		for (Map.Entry<String, List<ApplyKbFixAction>> group : manualFixes.entrySet()) {
+			for (ApplyKbFixAction action : group.getValue()) {
+				buf.append(action.fix.id);
+				buf.append("=");
+				buf.append(isApplied(action.fix) ? "t" : "f");
+				buf.append(",");
+			}
+		}
+		if (buf.length() > 0)
+			buf.deleteCharAt(buf.length() -1); // remove last ,
+		return buf.toString();
+	}
+	
 //============  private helper methods =========================
 	
 	private static int xt2rfb(int x) {
@@ -322,17 +345,28 @@ public class KeyboardEventMap {
 		return remap;
 	}
 
-	private static void loadManualFixes() {
+	private void loadManualFixes(String setupString) {
 		Map<String, String> fixes = loadMap("keyboardfix/fix.properties");
+		Map<String, Boolean> setup = parseSetup(setupString);
 		for (Map.Entry<String, String> entry : fixes.entrySet()) {
 			String dir = "keyboardfix" + "/" + entry.getKey() + "/";
 			Map<String, String> params = parseParams(entry.getValue());
 
 			KbFix fix = new KbFix(
+					entry.getKey(),
 					params,
 					loadKeycodeRemap(dir + "keycode_remap.properties"),
 					loadEventRemap(dir + "keyevent_remap.properties"));
 			if (fix.optional) {
+				if (setup.containsKey(fix.id)) {
+					if (setup.get(fix.id)) {
+						applyFix(fix);
+						logger.debug("apply fix(setup): " + fix);
+					}
+				} else if (isActive(params)) {
+					logger.debug("apply fix: " + fix);
+					applyFix(fix);
+				}
 				String groupName = params.get("group");
 				if (groupName == null) {
 					groupName = "";
@@ -343,12 +377,9 @@ public class KeyboardEventMap {
 					manualFixes.put(groupName, fixGroup);
 				}
 				fixGroup.add(new ApplyKbFixAction(loadMap(dir + "desc.properties"), fix));
-				if (isActive(params)) {
-					logger.debug("apply fix: " + fix);
-					applyFix(fix);
-				}
 			} else {
-				applyFix(fix);
+				if (!setup.containsKey(fix.id) || setup.get(fix.id))
+					applyFix(fix);
 			}
 		}
 	}
@@ -380,6 +411,23 @@ public class KeyboardEventMap {
 		return params;
 	}
 
+	private static Map<String, Boolean> parseSetup(String setupString) {
+		Map <String, Boolean> setup = new HashMap<String, Boolean>();
+		if (setupString != null) try {
+			for (String fix : setupString.split(",")) {
+				String[] val = fix.split("=");
+				if (val.length != 2) {
+					logger.warn("Exception parsing setup, invalid entry: " + fix);
+				}
+				setup.put(val[0].trim(), Boolean.valueOf("t".equals(val[1].trim())));
+			}
+		} catch (Exception e) {
+			logger.error("Exception parsing setup string: " + setupString, e);
+		}
+		logger.debug("setupString: " + setupString + "  :: " + setup);
+		return setup;
+	}
+
 // ==== initialisation ====
 	static {
 		if (Util.isLinux()) {
@@ -393,7 +441,24 @@ public class KeyboardEventMap {
 		}
 		logger.info("CURRENT_OS: " + CURRENT_OS);
 		loadJava2RfbKeymap();
-		loadManualFixes();
 	}
 
+	private static KeyboardEventMap instance;
+	
+	public static KeyboardEventMap getInstance () {
+		if (instance == null)
+			throw new IllegalStateException("KeyboardEventMap not initialized!");
+		return instance;
+	}
+	
+	public static void init (String setup) {
+		if (instance != null)
+			throw new IllegalStateException("KeyboardEventMap already initialized!");
+		instance = new KeyboardEventMap(setup);
+	}
+	
+	private KeyboardEventMap(String setup) {
+		loadManualFixes(setup);
+	}
+	
 }

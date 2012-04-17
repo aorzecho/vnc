@@ -64,7 +64,7 @@ public class KeyboardEvent implements IServerMessage {
 
 	public KeyboardEvent(KeyEvent evt) throws KeyUndefinedException {
 		
-		KeyEntry key = KeyboardEventMap.remapCodes(evt);
+		KeyEntry key = KeyboardEventMap.getInstance().remapCodes(evt);
 		_keycode = key.keycode;
 		_keysym = key.keysym;
 		_press = (evt.getID() == KeyEvent.KEY_PRESSED);

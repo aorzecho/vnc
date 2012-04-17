@@ -8,4 +8,6 @@ public class VncEventSubscriber implements IVncEventSubscriber {
 	
 	public void destroy(String s){}
 	
+	public void updSetup(String s){}
+	
 }

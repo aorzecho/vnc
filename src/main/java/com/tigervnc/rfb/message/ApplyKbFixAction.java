@@ -21,7 +21,7 @@ import org.apache.log4j.Logger;
 public class ApplyKbFixAction implements Action, ChangeListener {
 
 	public static Logger logger = Logger.getLogger(ApplyKbFixAction.class);
-	private final KeyboardEventMap.KbFix fix;
+	final KeyboardEventMap.KbFix fix;
 	private Map props;
 	Set<PropertyChangeListener> changeListeners;
 
@@ -74,7 +74,7 @@ public class ApplyKbFixAction implements Action, ChangeListener {
 	}
 
 	public boolean isApplied() {
-		return KeyboardEventMap.isApplied(fix);
+		return KeyboardEventMap.getInstance().isApplied(fix);
 	}
 
 	@Override
@@ -83,11 +83,11 @@ public class ApplyKbFixAction implements Action, ChangeListener {
 	}
 
 	private void update(boolean selected) {
-		if (selected && !KeyboardEventMap.isApplied(fix)) {
-			KeyboardEventMap.applyFix(fix);
+		if (selected && !KeyboardEventMap.getInstance().isApplied(fix)) {
+			KeyboardEventMap.getInstance().applyFix(fix);
 			logger.info("enabled " + props.get(NAME));
-		} else if (!selected && KeyboardEventMap.isApplied(fix)) {
-			KeyboardEventMap.unapplyFix(fix);
+		} else if (!selected && KeyboardEventMap.getInstance().isApplied(fix)) {
+			KeyboardEventMap.getInstance().unapplyFix(fix);
 			logger.info("disabled " + props.get(NAME));
 		}
 	}

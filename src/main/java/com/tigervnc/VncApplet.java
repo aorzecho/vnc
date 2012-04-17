@@ -2,19 +2,10 @@ package com.tigervnc;
 
 
 import java.applet.Applet;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
-import java.net.URLStreamHandler;
-import java.net.URLStreamHandlerFactory;
-import java.util.Random;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.LinkedBlockingDeque;
 import javax.swing.JApplet;
 import org.apache.log4j.Logger;
 
@@ -26,25 +17,26 @@ public class VncApplet extends JApplet {
 	private String port;
 	private String host;
 	private String log_level;
+	private String keyboard_setup;
 	private String show_controls;
 	private String new_window;
 	private String id;
 	//	private JSObject js;
 	private String callback;
 	private Thread jsExecutorThread;
-	private	BlockingQueue<String> jsScriptQueue = new ArrayBlockingQueue<String>(10);
+	private	BlockingDeque<String> jsScriptQueue = new LinkedBlockingDeque<String>(10);
 	private JsExecutor jsExecutor;
 	public VncViewer vncViewer;
 	
 	private static class JsExecutor implements Runnable {
 		
 		private final Applet applet;
-		private final BlockingQueue<String> scriptQueue;
+		private final BlockingDeque<String> scriptQueue;
 		Method getWindowMethod;
 		Method evalMethod;
 		Class jsObjClazz;
 		
-		public JsExecutor (Applet applet, BlockingQueue<String> scriptQueue) {
+		public JsExecutor (Applet applet, BlockingDeque<String> scriptQueue) {
 			this.applet = applet;
 			this.scriptQueue = scriptQueue;
 			try {
@@ -67,7 +59,7 @@ public class VncApplet extends JApplet {
 		public void run() {
 			while (!Thread.currentThread().isInterrupted()) {
 				try {
-					String script = scriptQueue.take();
+					String script = scriptQueue.takeFirst();
 					logger.debug("calling javascript: " + script);
 					 applet.getAppletContext().showDocument
 						(new URL("javascript: " + script)); // does not work with icedtea plugin, but does not hang...
@@ -95,6 +87,7 @@ public class VncApplet extends JApplet {
 		log_level = getParameter("log_level", "info");
 		show_controls = getParameter("show_controls", "no");
 		new_window = getParameter("new_window", "yes");
+		keyboard_setup = getParameter("keyboard_setup", null);
 		
 		subscribe_to_vnc_events();
 
@@ -127,18 +120,24 @@ public class VncApplet extends JApplet {
             super.start();
         }
         
-	private void subscribe_to_vnc_events(){
+	private void subscribe_to_vnc_events() {
 		VncEventPublisher.subscribe(new VncEventSubscriber(){
 			
 			@Override
 			public void connectionError(String msg, Exception e){
 				publishEvent(VncEvent.CONNECTION_ERROR, id, msg);
 			}
+
+			@Override
+			public void updSetup(String msg) {
+				publishEvent(VncEvent.UPD_SETUP, id, msg);
+			}
 			
 			@Override
 			public void destroy(String msg){
 				publishEvent(VncEvent.DESTROY, id, msg);
 			}
+
 		});
 	}
 
@@ -153,6 +152,7 @@ public class VncApplet extends JApplet {
 					"window_title", window_title,
 					"show_controls", show_controls,
 					"new_window", new_window,
+					"keyboard_setup", keyboard_setup,
 					"log_level", log_level
 				});
 
@@ -197,7 +197,7 @@ public class VncApplet extends JApplet {
 	}
 
 	public void evalJs(String script) {
-		if (!jsScriptQueue.offer(script)) {
+		if (!jsScriptQueue.offerLast(script)) {
 			throw new IllegalStateException("javascript queue full");
 		}
 	}

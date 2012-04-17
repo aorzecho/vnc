@@ -32,6 +32,9 @@ public class VncEventPublisher {
 		case DESTROY:
 			for(VncEventSubscriber s : subscribers){s.destroy(txt);}
 			break;			
+		case UPD_SETUP:
+			for(VncEventSubscriber s : subscribers){s.updSetup(txt);}
+			break;			
 		default:
 			System.err.println("WTF?");
 		}	

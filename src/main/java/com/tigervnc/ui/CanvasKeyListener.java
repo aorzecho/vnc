@@ -49,7 +49,7 @@ public class CanvasKeyListener implements KeyListener {
 				// Input enabled.
 				synchronized (rfb) {
 					try {
-						List<KeyboardEventMap.EvtEntry> remap = KeyboardEventMap.remapEvent(evt);
+						List<KeyboardEventMap.EvtEntry> remap = KeyboardEventMap.getInstance().remapEvent(evt);
 						if (remap != null) {
 							for (KeyboardEventMap.EvtEntry mappedEvt : remap)
 								rfb.writeKeyboardEvent(

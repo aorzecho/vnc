@@ -3,7 +3,8 @@ package com.tigervnc;
 public enum VncEvent {
 	INIT("init"),
 	CONNECTION_ERROR("connection_error"),
-	DESTROY("destroy");
+	DESTROY("destroy"),
+	UPD_SETUP("upd_setup");
 
 	private String name;
 

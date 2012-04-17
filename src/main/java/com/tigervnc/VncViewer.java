@@ -110,6 +110,7 @@ public class VncViewer implements java.lang.Runnable,
 	public String socketFactory;
 	public String host;
 	public String windowTitle;
+	public String keyboardSetup;
 	public int port;
 	public String log_level;
 	public String passwordParam;
@@ -129,6 +130,7 @@ public class VncViewer implements java.lang.Runnable,
 		
 		readParameters();
 		setLogLevel(log_level);
+		KeyboardEventMap.init(keyboardSetup);
 		initFrame();
 
 	}
@@ -205,8 +207,8 @@ public class VncViewer implements java.lang.Runnable,
 		JMenu fixMenu = new JMenu("Keyboard setup");
 		menuBar.add(fixMenu);
 
-		for (String group : KeyboardEventMap.manualFixes.keySet()) {
-			List<ApplyKbFixAction> fixes = KeyboardEventMap.manualFixes.get(group);
+		for (String group : KeyboardEventMap.getInstance().manualFixes.keySet()) {
+			List<ApplyKbFixAction> fixes = KeyboardEventMap.getInstance().manualFixes.get(group);
 			if ("".equals(group) || fixes.size() == 1) { // checkboxes
 				for (ApplyKbFixAction action : fixes) {
 					JCheckBoxMenuItem item = new JCheckBoxMenuItem(action);
@@ -754,6 +756,7 @@ public class VncViewer implements java.lang.Runnable,
 		host = readParameter("host", true);
 		port = readIntParameter("port", 5900);
 		log_level = getParameter("log_level", "info");
+		keyboardSetup = getParameter("keyboard_setup", null);
 
 		// Read "ENCPASSWORD" or "PASSWORD" parameter if specified.
 		readPasswordParameters();

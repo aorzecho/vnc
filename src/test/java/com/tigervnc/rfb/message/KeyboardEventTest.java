@@ -15,11 +15,20 @@ import com.tigervnc.rfb.Encodings;
 import com.tigervnc.rfb.message.KeyboardEvent.KeyUndefinedException;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.BeforeClass;
 
 
 public class KeyboardEventTest {
 
 	private JFrame dummy = new JFrame();
+
+	@Before
+	public void initKbMap () {
+		try {
+			KeyboardEventMap.init("");
+		}  catch (IllegalStateException ignore) {}
+	}
 	
 	@Test
 	public void test_getExtendedKeyEvent(){
