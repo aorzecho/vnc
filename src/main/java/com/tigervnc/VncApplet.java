@@ -40,11 +40,13 @@ public class VncApplet extends JApplet {
 		
 		private final Applet applet;
 		private final BlockingQueue<String> scriptQueue;
-		static Method getWindowMethod;
-		static Method evalMethod;
-		static Class jsObjClazz;
+		Method getWindowMethod;
+		Method evalMethod;
+		Class jsObjClazz;
 		
-		static {
+		public JsExecutor (Applet applet, BlockingQueue<String> scriptQueue) {
+			this.applet = applet;
+			this.scriptQueue = scriptQueue;
 			try {
 				jsObjClazz = Class.forName("netscape.javascript.JSObject");
 				synchronized (jsObjClazz) {
@@ -60,11 +62,6 @@ public class VncApplet extends JApplet {
 				logger.error("Exception while initializing JsExecutor " + e);
 			}
 		}
-		
-		public JsExecutor (Applet applet, BlockingQueue<String> scriptQueue) {
-			this.applet = applet;
-			this.scriptQueue = scriptQueue;
-		}
 
 		@Override
 		public void run() {
@@ -72,9 +69,11 @@ public class VncApplet extends JApplet {
 				try {
 					String script = scriptQueue.take();
 					logger.debug("calling javascript: " + script);
-					synchronized (jsObjClazz) {// hangs after several calls (icedtea plugin)
-						evalMethod.invoke(getWindowMethod.invoke(null, applet), "javascript: " + script);
-					}
+					 applet.getAppletContext().showDocument
+						(new URL("javascript: " + script)); // does not work with icedtea plugin, but does not hang...
+//					synchronized (jsObjClazz) {// hangs after several calls (icedtea plugin)
+//						evalMethod.invoke(getWindowMethod.invoke(null, applet), "javascript: " + script);
+//					}
 					logger.debug("executed javascript: " + script);
 				} catch (InterruptedException ex) {
 					break;
@@ -98,14 +97,15 @@ public class VncApplet extends JApplet {
 		new_window = getParameter("new_window", "yes");
 		
 		subscribe_to_vnc_events();
-		
-		startVNC();
-		publishEvent(VncEvent.INIT, id);
+
 		jsExecutor = new JsExecutor(this, jsScriptQueue);
 		jsExecutorThread = new Thread(jsExecutor);
 		jsExecutorThread.setName("jsExecutorThread");
 		jsExecutorThread.setDaemon(true);
 		jsExecutorThread.start();
+		
+		startVNC();
+		publishEvent(VncEvent.INIT, id);
 	}
 	
         @Override
