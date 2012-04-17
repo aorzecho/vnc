@@ -8,7 +8,7 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.lang.reflect.Field;
 import java.util.*;
-import org.apache.log4j.Logger;
+import com.tigervnc.log.VncLogger;
 
 /**
  *
@@ -16,7 +16,7 @@ import org.apache.log4j.Logger;
  */
 public final class KeyEntry {
 
-	public static Logger logger = Logger.getLogger(KeyEntry.class);
+	public static VncLogger logger = VncLogger.getLogger(KeyEntry.class);
 	public static final KeyEntry ALT = new KeyEntry(KeyEvent.VK_ALT, KeyEvent.CHAR_UNDEFINED, KeyEvent.ALT_DOWN_MASK);
 	public static final KeyEntry ALT_GR = new KeyEntry(KeyEvent.VK_ALT_GRAPH, KeyEvent.CHAR_UNDEFINED, KeyEvent.ALT_GRAPH_DOWN_MASK);
 	public static final KeyEntry CTRL = new KeyEntry(KeyEvent.VK_CONTROL, KeyEvent.CHAR_UNDEFINED, KeyEvent.CTRL_DOWN_MASK);

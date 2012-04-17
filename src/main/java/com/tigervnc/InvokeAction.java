@@ -7,7 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import org.apache.log4j.Logger;
+import com.tigervnc.log.VncLogger;
 
 /**
  *
@@ -18,7 +18,7 @@ public class InvokeAction implements ActionListener {
     private final Method method;
     private final Object obj;
     private final Object[] args;
-	public static Logger logger = Logger.getLogger(InvokeAction.class);
+	public static VncLogger logger = VncLogger.getLogger(InvokeAction.class);
     
     public InvokeAction (Class clazz, String methodName, Object ... args) throws NoSuchMethodException {
         Class[] paramTypes = new Class[args.length];

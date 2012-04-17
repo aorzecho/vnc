@@ -3,11 +3,11 @@ package com.tigervnc;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import com.tigervnc.log.VncLogger;
 
 public class VncEventPublisher {
 
-	static Logger logger = Logger.getLogger(VncEventPublisher.class);
+	static VncLogger logger = VncLogger.getLogger(VncEventPublisher.class);
 	
 	private static List<VncEventSubscriber> subscribers = new ArrayList<VncEventSubscriber>();
 	

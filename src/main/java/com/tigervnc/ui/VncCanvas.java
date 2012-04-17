@@ -51,7 +51,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import com.tigervnc.log.VncLogger;
 
 import com.tigervnc.RecordOutputStream;
 import com.tigervnc.Util;
@@ -79,7 +79,7 @@ import com.tigervnc.rfb.message.KeyboardEvent.KeyUndefinedException;
 public class VncCanvas extends Canvas implements MouseListener, MouseWheelListener,
 		MouseMotionListener, Repaintable, Runnable {
 
-	static Logger logger = Logger.getLogger(VncCanvas.class);
+	static VncLogger logger = VncLogger.getLogger(VncCanvas.class);
 	
 	VncViewer viewer;
 	RfbProto rfb;

@@ -14,7 +14,7 @@ import java.util.jar.JarInputStream;
 import javax.swing.Action;
 import static java.awt.event.KeyEvent.*;
 import java.util.regex.Pattern;
-import org.apache.log4j.Logger;
+import com.tigervnc.log.VncLogger;
 
 public class KeyboardEventMap {
 
@@ -125,7 +125,7 @@ public class KeyboardEventMap {
 		}
 	}
 	
-	public static final Logger logger = Logger.getLogger(KeyboardEventMap.class);
+	public static final VncLogger logger = VncLogger.getLogger(KeyboardEventMap.class);
 	private static final Pattern CSV_SPLIT_PATTERN = Pattern.compile("\\s*,\\s*");
 	private static final Map<Integer, Integer> javaCode2rfb = new HashMap<Integer, Integer>(512);
 	private final SortedSet<KbFix> fixes = Collections.synchronizedSortedSet(new TreeSet<KbFix>());

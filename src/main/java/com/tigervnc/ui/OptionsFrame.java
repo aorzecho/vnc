@@ -32,7 +32,7 @@ package com.tigervnc.ui;
 import java.awt.*;
 import java.awt.event.*;
 
-import org.apache.log4j.Logger;
+import com.tigervnc.log.VncLogger;
 
 import com.tigervnc.VncViewer;
 import com.tigervnc.rfb.Encodings;
@@ -40,7 +40,7 @@ import com.tigervnc.rfb.RfbProto;
 
 public class OptionsFrame extends Frame implements WindowListener, ActionListener, ItemListener {
 
-  private static Logger logger = Logger.getLogger(VncViewer.class);
+  private static VncLogger logger = VncLogger.getLogger(VncViewer.class);
 	
   static String[] names = {
     "Encoding",

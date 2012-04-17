@@ -52,11 +52,11 @@ import com.tigervnc.rfb.message.SetPixelFormat;
 import com.tigervnc.rfb.message.Version;
 import java.util.Arrays;
 
-import org.apache.log4j.Logger;
+import com.tigervnc.log.VncLogger;
 
 public class RfbProto {
 
-	private static Logger logger = Logger.getLogger(RfbProto.class);
+	private static VncLogger logger = VncLogger.getLogger(RfbProto.class);
 	
 	String host;
 	int port;

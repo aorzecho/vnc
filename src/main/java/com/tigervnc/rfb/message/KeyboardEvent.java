@@ -7,7 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import com.tigervnc.log.VncLogger;
 
 import com.tigervnc.Util;
 import com.tigervnc.VncViewer;
@@ -19,7 +19,7 @@ public class KeyboardEvent implements IServerMessage {
 	// for the values of the VK_... constants
 	// http://kickjava.com/src/java/awt/event/KeyEvent.java.htm
 	
-	private static Logger logger = Logger.getLogger(KeyboardEvent.class);
+	private static VncLogger logger = VncLogger.getLogger(KeyboardEvent.class);
 	
 	public class KeyUndefinedException extends Exception {
 		public KeyUndefinedException (String msg){

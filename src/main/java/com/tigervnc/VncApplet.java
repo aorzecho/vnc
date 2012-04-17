@@ -7,11 +7,11 @@ import java.net.URL;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import javax.swing.JApplet;
-import org.apache.log4j.Logger;
+import com.tigervnc.log.VncLogger;
 
 public class VncApplet extends JApplet {
 
-	private static Logger logger = Logger.getLogger(VncApplet.class);
+	private static VncLogger logger = VncLogger.getLogger(VncApplet.class);
 
 	private String window_title;
 	private String port;

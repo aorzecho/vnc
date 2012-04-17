@@ -12,7 +12,7 @@ import javax.swing.AbstractButton;
 import javax.swing.Action;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import org.apache.log4j.Logger;
+import com.tigervnc.log.VncLogger;
 
 /**
  *
@@ -20,7 +20,7 @@ import org.apache.log4j.Logger;
  */
 public class ApplyKbFixAction implements Action, ChangeListener {
 
-	public static Logger logger = Logger.getLogger(ApplyKbFixAction.class);
+	public static VncLogger logger = VncLogger.getLogger(ApplyKbFixAction.class);
 	final KeyboardEventMap.KbFix fix;
 	private Map props;
 	Set<PropertyChangeListener> changeListeners;

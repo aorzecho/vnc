@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import com.tigervnc.log.VncLogger;
 
 import com.tigervnc.Util;
 import com.tigervnc.rfb.RfbProto;
@@ -19,7 +19,7 @@ import static java.awt.event.KeyEvent.*;
 
 public class CanvasKeyListener implements KeyListener {
 
-	private static Logger logger = Logger.getLogger(CanvasKeyListener.class);
+	private static VncLogger logger = VncLogger.getLogger(CanvasKeyListener.class);
 	
 	private RfbProto rfb;
 	private VncCanvas canvas;
@@ -112,7 +112,7 @@ public class CanvasKeyListener implements KeyListener {
 			updateModifersState(evt);
 			process(evt);
 		} catch (Exception ex) {
-			logger.log(null, ex);
+			logger.error("Exception processing " + evt, ex);
 		}
 	}
 

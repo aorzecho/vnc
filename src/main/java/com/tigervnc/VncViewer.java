@@ -53,9 +53,7 @@ import javax.management.RuntimeErrorException;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import com.tigervnc.log.VncLogger;
 
 import com.tigervnc.rfb.Encodings;
 import com.tigervnc.rfb.RfbProto;
@@ -70,13 +68,13 @@ import com.tigervnc.ui.VncCanvas;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 import javax.swing.*;
-import org.apache.log4j.LogManager;
 
 public class VncViewer implements java.lang.Runnable,
 		WindowListener, ComponentListener {
 
-	public static Logger logger = Logger.getLogger(VncViewer.class);
+	public static VncLogger logger = VncLogger.getLogger(VncViewer.class);
 	public static boolean inAnApplet = true;
 	public static VncApplet applet;
 
@@ -125,7 +123,6 @@ public class VncViewer implements java.lang.Runnable,
 	public int debugStatsMeasureUpdates;
 	
 	public VncViewer(String[] argv) {
-		BasicConfigurator.configure();
 		mainArgs = argv;
 		
 		readParameters();
@@ -728,23 +725,23 @@ public class VncViewer implements java.lang.Runnable,
 		switch (log_level.charAt(0)) {
 		case 'd':
 		case 'D':
-			LogManager.getRootLogger().setLevel(Level.DEBUG);
+			VncLogger.setDefaultLevel(Level.FINE);
 			break;
 		case 'i':
 		case 'I':
-			LogManager.getRootLogger().setLevel(Level.INFO);
+			VncLogger.setDefaultLevel(Level.INFO);
 			break;
 		case 'w':
 		case 'W':
-			LogManager.getRootLogger().setLevel(Level.WARN);
+			VncLogger.setDefaultLevel(Level.WARNING);
 			break;
 		case 'e':
 		case 'E':
-			LogManager.getRootLogger().setLevel(Level.ERROR);
+			VncLogger.setDefaultLevel(Level.SEVERE);
 			break;
 		case 'f':
 		case 'F':
-			LogManager.getRootLogger().setLevel(Level.FATAL);
+			VncLogger.setDefaultLevel(Level.SEVERE);
 			break;
 		default:
 			System.err.println(": Invalid debug level: "
