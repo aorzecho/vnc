@@ -67,6 +67,7 @@ import com.tigervnc.ui.ReloginPanel;
 import com.tigervnc.ui.VncCanvas;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import javax.swing.*;
@@ -236,7 +237,7 @@ public class VncViewer implements java.lang.Runnable,
 		sendKeysMenu.add(menuItem("Ctrl+Alt+BkSpace", "sendKey", new KeyEntry("VK_BACK_SPACE+ALT+CTRL")));
 		sendKeysMenu.add(menuItem("Ctrl+Alt+F1", "sendKey", new KeyEntry("VK_F1+ALT+CTRL")));
 		sendKeysMenu.add(menuItem("Ctrl+Alt+F7", "sendKey", new KeyEntry("VK_F7+ALT+CTRL")));
-		sendKeysMenu.add(menuItem("release modifier keys", "sendKey", new KeyEntry("VK_SHIFT+ALT+CTRL+ALT_GRAPH")));
+		sendKeysMenu.add(menuItem("release modifier keys", "releaseModKeys"));
 		return menuBar;
 	}
 
@@ -287,6 +288,11 @@ public class VncViewer implements java.lang.Runnable,
 		}
 	}
 
+	public void releaseModKeys() {
+			for (KeyEntry key : KeyEntry.MODIFIER_KEYS)
+				sendKey(key);
+	}
+	
 	public void sendKey(KeyEntry key) {
 		if (rfb != null && !rfb.closed()) {
 			try {
@@ -303,7 +309,7 @@ public class VncViewer implements java.lang.Runnable,
 				}
 
 			} catch (Exception ex) {
-				logger.error("Exception sending ctrlAltDel", ex);
+				logger.error("Exception sending " + key, ex);
 			}
 		}
 	}
@@ -993,11 +999,11 @@ public class VncViewer implements java.lang.Runnable,
 	}
 
 	public void stop() {
-		logger.debug("Stopping vncViewer");
+		logger.info("Stopping vncViewer");
 	}
 
 	public void start () {
-		logger.debug("Starting vncViewer");
+		logger.info("Starting vncViewer");
         
 	}
     

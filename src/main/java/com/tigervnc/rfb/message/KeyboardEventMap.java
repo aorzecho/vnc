@@ -418,6 +418,7 @@ public class KeyboardEventMap {
 				String[] val = fix.split("=");
 				if (val.length != 2) {
 					logger.warn("Exception parsing setup, invalid entry: " + fix);
+					continue;
 				}
 				setup.put(val[0].trim(), Boolean.valueOf("t".equals(val[1].trim())));
 			}

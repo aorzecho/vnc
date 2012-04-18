@@ -9,20 +9,27 @@ import java.util.Map;
 import com.tigervnc.log.VncLogger;
 
 import com.tigervnc.Util;
+import com.tigervnc.VncViewer;
 import com.tigervnc.rfb.RfbProto;
 import com.tigervnc.rfb.message.KeyEntry;
 import com.tigervnc.rfb.message.KeyboardEvent;
 import com.tigervnc.rfb.message.KeyboardEvent.KeyUndefinedException;
 import com.tigervnc.rfb.message.KeyboardEventMap;
+import java.awt.Component;
 import java.util.*;
 import static java.awt.event.KeyEvent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CanvasKeyListener implements KeyListener {
 
 	private static VncLogger logger = VncLogger.getLogger(CanvasKeyListener.class);
 	
+	private static final int[] MODIFIER_KEYCODES = new int[] {VK_ALT, VK_ALT_GRAPH, VK_CONTROL, VK_SHIFT, VK_META};
+	
 	private RfbProto rfb;
 	private VncCanvas canvas;
+	
+	private final AtomicBoolean firstKey = new AtomicBoolean(true);
 	
 	private Set <Integer> pressed = Collections.synchronizedSet(new HashSet <Integer>());
 	
@@ -49,16 +56,24 @@ public class CanvasKeyListener implements KeyListener {
 				// Input enabled.
 				synchronized (rfb) {
 					try {
+						if (firstKey.compareAndSet(true, false) && KeyboardEvent.extended_key_event) { // clean modifier keys state
+							logger.info("First key event - sending modifier keys events to reset state");
+							for (KeyEntry key : KeyEntry.MODIFIER_KEYS) {
+								rfb.writeKeyboardEvent(key.keysym, key.keycode, true);
+								rfb.writeKeyboardEvent(key.keysym, key.keycode, false);
+							}
+						}
 						List<KeyboardEventMap.EvtEntry> remap = KeyboardEventMap.getInstance().remapEvent(evt);
 						if (remap != null) {
-							for (KeyboardEventMap.EvtEntry mappedEvt : remap)
+							for (KeyboardEventMap.EvtEntry mappedEvt : remap) {
 								rfb.writeKeyboardEvent(
-									mappedEvt.key.keysym, 
-									mappedEvt.key.keycode, 
-									mappedEvt.evtId == KeyEvent.KEY_PRESSED);
+										mappedEvt.key.keysym,
+										mappedEvt.key.keycode,
+										mappedEvt.evtId == KeyEvent.KEY_PRESSED);
+							}
 						} else if (evt.getID() == KeyEvent.KEY_TYPED) {
-                                                    logger.debug("Ignored key typed event: " + evt );
-                                                } else {
+							logger.debug("Ignored key typed event: " + evt);
+						} else {
 							rfb.writeKeyboardEvent(evt);
 						}
 					} catch (IOException e) {
@@ -77,7 +92,7 @@ public class CanvasKeyListener implements KeyListener {
 	}
 
 	private void updateModifersState (KeyEvent evt) throws Exception {
-		for (int keycode : new int[] {VK_ALT, VK_ALT_GRAPH, VK_CONTROL, VK_SHIFT, VK_META})
+		for (int keycode : MODIFIER_KEYCODES)
 			if (evt.getKeyCode() != keycode)
 				switch (keycode) {
 					case VK_ALT: updateMod(keycode, evt.isAltDown()); break;
@@ -123,7 +138,7 @@ public class CanvasKeyListener implements KeyListener {
 			//missing press event, process fake one
 			logger.info("sending missing press event for " + evt);
 			process(
-				new KeyEvent(evt.getComponent(), KeyEvent.KEY_PRESSED, evt.getWhen(), 
+				new KeyEvent(Component.class.cast(evt.getSource()), KeyEvent.KEY_PRESSED, evt.getWhen(), 
 				evt.getModifiers(), evt.getKeyCode(), evt.getKeyChar(), evt.getKeyLocation())
 				);
 		}

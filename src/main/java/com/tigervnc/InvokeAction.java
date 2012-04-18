@@ -5,7 +5,6 @@ package com.tigervnc;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import com.tigervnc.log.VncLogger;
 
@@ -15,27 +14,23 @@ import com.tigervnc.log.VncLogger;
  */
 public class InvokeAction implements ActionListener {
 
-    private final Method method;
-    private final Object obj;
-    private final Object[] args;
 	public static VncLogger logger = VncLogger.getLogger(InvokeAction.class);
+    
+	private final Method method;
+    private final Object[] args;
+    private Object obj;
     
     public InvokeAction (Class clazz, String methodName, Object ... args) throws NoSuchMethodException {
         Class[] paramTypes = new Class[args.length];
         for (int i=0; i<args.length; i++)
             paramTypes[i] = args[i].getClass();
-        this.method = clazz.getMethod(methodName, paramTypes);
-        this.obj = null;
-        this.args = args;
+		this.method = clazz.getMethod(methodName, paramTypes);
+		this.args = args;
     }
 
     public InvokeAction (Object obj, String methodName, Object ... args) throws NoSuchMethodException {
-        Class[] paramTypes = new Class[args.length];
-        for (int i=0; i<args.length; i++)
-            paramTypes[i] = args[i].getClass();
-        this.method = obj.getClass().getMethod(methodName, paramTypes);
+		this(obj.getClass(), methodName, args);
         this.obj = obj;
-        this.args = args;
     }
 
     @Override

@@ -135,7 +135,9 @@ public class VncApplet extends JApplet {
 			
 			@Override
 			public void destroy(String msg){
-				publishEvent(VncEvent.DESTROY, id, msg);
+				// do not call js when applet is beeing destroyed
+//				publishEvent(VncEvent.DESTROY, id, msg);
+				
 			}
 
 		});

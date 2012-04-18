@@ -22,6 +22,8 @@ public final class KeyEntry {
 	public static final KeyEntry CTRL = new KeyEntry(KeyEvent.VK_CONTROL, KeyEvent.CHAR_UNDEFINED, KeyEvent.CTRL_DOWN_MASK);
 	public static final KeyEntry SHIFT = new KeyEntry(KeyEvent.VK_SHIFT, KeyEvent.CHAR_UNDEFINED, KeyEvent.SHIFT_DOWN_MASK);
 	public static final KeyEntry META = new KeyEntry(KeyEvent.VK_META, KeyEvent.CHAR_UNDEFINED, KeyEvent.META_DOWN_MASK);
+	public static final KeyEntry[] MODIFIER_KEYS = new KeyEntry[] {ALT, ALT_GR, CTRL, SHIFT};
+	
 	public final int keycode;
 	public final int keysym;
 	public final boolean alt;
@@ -92,23 +94,23 @@ public final class KeyEntry {
 		Deque<KeyboardEventMap.EvtEntry> evts = new ArrayDeque<KeyboardEventMap.EvtEntry>();
 		evts.add(new KeyboardEventMap.EvtEntry(KeyEvent.KEY_PRESSED, this));
 		evts.add(new KeyboardEventMap.EvtEntry(KeyEvent.KEY_RELEASED, this));
-		if (alt) {
+		if (alt && keycode != ALT.keycode) {
 			evts.addFirst(new KeyboardEventMap.EvtEntry(KeyEvent.KEY_PRESSED, ALT));
 			evts.addLast(new KeyboardEventMap.EvtEntry(KeyEvent.KEY_RELEASED, ALT));
 		}
-		if (altGr) {
+		if (altGr && keycode != ALT_GR.keycode) {
 			evts.addFirst(new KeyboardEventMap.EvtEntry(KeyEvent.KEY_PRESSED, ALT_GR));
 			evts.addLast(new KeyboardEventMap.EvtEntry(KeyEvent.KEY_RELEASED, ALT_GR));
 		}
-		if (ctrl) {
+		if (ctrl && keycode != CTRL.keycode) {
 			evts.addFirst(new KeyboardEventMap.EvtEntry(KeyEvent.KEY_PRESSED, CTRL));
 			evts.addLast(new KeyboardEventMap.EvtEntry(KeyEvent.KEY_RELEASED, CTRL));
 		}
-		if (shift) {
+		if (shift && keycode != SHIFT.keycode) {
 			evts.addFirst(new KeyboardEventMap.EvtEntry(KeyEvent.KEY_PRESSED, SHIFT));
 			evts.addLast(new KeyboardEventMap.EvtEntry(KeyEvent.KEY_RELEASED, SHIFT));
 		}
-		if (meta) {
+		if (meta && keycode != META.keycode) {
 			evts.addFirst(new KeyboardEventMap.EvtEntry(KeyEvent.KEY_PRESSED, META));
 			evts.addLast(new KeyboardEventMap.EvtEntry(KeyEvent.KEY_RELEASED, META));
 		}

@@ -26,7 +26,7 @@ public class KeyboardEventTest {
 	@Before
 	public void initKbMap () {
 		try {
-			KeyboardEventMap.init("");
+			KeyboardEventMap.init(null);
 		}  catch (IllegalStateException ignore) {}
 	}
 	
