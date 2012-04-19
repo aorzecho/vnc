@@ -61,11 +61,11 @@ public class VncApplet extends JApplet {
 				try {
 					String script = scriptQueue.takeFirst();
 					logger.debug("calling javascript: " + script);
-//					 applet.getAppletContext().showDocument
-//						(new URL("javascript: " + script)); // does not work with icedtea plugin, but does not hang...
-					synchronized (jsObjClazz) {// hangs after several calls (icedtea plugin)
-						evalMethod.invoke(getWindowMethod.invoke(null, applet), "javascript: " + script + ";\n");
-					}
+					 applet.getAppletContext().showDocument
+						(new URL("javascript: " + script)); // does not work with icedtea plugin, but does not hang...
+//					synchronized (jsObjClazz) {// hangs after several calls (icedtea plugin)
+//						evalMethod.invoke(getWindowMethod.invoke(null, applet), "javascript: " + script + ";\n");
+//					}
 					logger.debug("executed javascript: " + script);
 				} catch (InterruptedException ex) {
 					break;

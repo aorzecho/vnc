@@ -295,17 +295,6 @@ public class KeyboardEvent implements IServerMessage {
 	}
 	
 	private void handleWinPecularities(KeyEvent evt){
-//		if (_keycode == KeyEvent.VK_DEAD_ACUTE) {
-//			// WTF? When danish layout VK_EQUALS is changed to DEAD_ACUTE
-//			_keycode = KeyEvent.VK_EQUALS;
-//		}
-//		else if(_keycode == KeyEvent.VK_QUOTE){
-//			if(_keysym == '\'' || _keysym == '*'){
-//			// on danish layouts pressing backslash button
-//			// wrongly produces 222 (VK_QUOTE) which is the keycode for ø!
-//			_keycode = KeyEvent.VK_BACK_SLASH;
-//			}
-//		}
 	}
 	
 	private void handleJavaPecularities(KeyEvent evt){

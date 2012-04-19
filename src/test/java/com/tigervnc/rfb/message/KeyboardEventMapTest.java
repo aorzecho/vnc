@@ -3,6 +3,7 @@
  */
 package com.tigervnc.rfb.message;
 
+import com.tigervnc.log.VncLogger;
 import java.awt.Canvas;
 import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
@@ -25,13 +26,23 @@ import static java.awt.event.KeyEvent.*;
  */
 public class KeyboardEventMapTest {
 	
+	@BeforeClass
+	public static void initKbMap () {
+		try {
+			VncLogger.ASSERT_NO_ERRORS = true;
+			KeyboardEventMap.init(null);
+		}  catch (IllegalStateException ignore) {}
+	}
+
 	@Test
 	public void testKeyEntryConstructors() {
 		for (KeyEntry ke : new KeyEntry[] {
-			new KeyEntry(VK_A, 'a', ALL_MOD),
-			new KeyEntry(new KeyEvent(dummy, KEY_PRESSED, 0, ALL_MOD, VK_A, 'a')),
-			new KeyEntry("VK_A|97+ALT+ALT_GRAPH+CTRL+SHIFT+META")
+			new KeyEntry(VK_A, 'A', ALL_MOD),
+			new KeyEntry(new KeyEvent(dummy, KEY_PRESSED, 0, ALL_MOD, VK_A, 'A')),
+			new KeyEntry("VK_A|65+ALT+ALT_GRAPH+CTRL+SHIFT+META")
 			}) {
+			assertEquals(ke.keycode, VK_A);
+			assertEquals(ke.keysym, 'A');
 			assertTrue("Alt is missing", ke.alt);
 			assertTrue("AltGr is missing", ke.altGr);
 			assertTrue("Ctrl is missing", ke.ctrl);

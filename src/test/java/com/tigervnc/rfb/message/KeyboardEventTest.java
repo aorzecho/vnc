@@ -1,5 +1,6 @@
 package com.tigervnc.rfb.message;
 
+import com.tigervnc.log.VncLogger;
 import java.awt.event.KeyEvent;
 import java.nio.ByteBuffer;
 
@@ -12,16 +13,17 @@ import com.tigervnc.rfb.message.KeyboardEvent.KeyUndefinedException;
 import java.awt.Canvas;
 import java.util.HashMap;
 import java.util.Map;
-import org.junit.Before;
+import org.junit.BeforeClass;
 
 
 public class KeyboardEventTest {
 
 	private Canvas dummy = new Canvas();
 
-	@Before
-	public void initKbMap () {
+	@BeforeClass
+	public static void initKbMap () {
 		try {
+			VncLogger.ASSERT_NO_ERRORS = true; // fail on errors/warnings
 			KeyboardEventMap.init(null);
 		}  catch (IllegalStateException ignore) {}
 	}

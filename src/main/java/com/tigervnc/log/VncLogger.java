@@ -19,6 +19,8 @@ public class VncLogger {
 
 	private final String name;
 	
+	public static boolean ASSERT_NO_ERRORS = false; //used in unit tests to fail on errors/warnings
+	
 	public static void setDefaultLevel (Level level) {
 		VncLogger.level = level;
 		logger.setLevel(level);
@@ -46,19 +48,27 @@ public class VncLogger {
 	}
 
 	public void warn(Object message, Throwable t) {
+		if (ASSERT_NO_ERRORS)
+			throw new AssertionError(message + t.toString());
 		if (level.intValue() <= Level.WARNING.intValue())
 			logger.log(Level.WARNING, formatMsg(message), t);
 	}
 	public void warn(Object message) {
+		if (ASSERT_NO_ERRORS)
+			throw new AssertionError(message);
 		if (level.intValue() <= Level.WARNING.intValue())
 			logger.log(Level.WARNING, formatMsg(message));
 	}
 
 	public void error(Object message) {
+		if (ASSERT_NO_ERRORS)
+			throw new AssertionError(message);
 		logger.log(Level.SEVERE, formatMsg(message));
 	}
 
 	public void error(Object message, Throwable t) {
+		if (ASSERT_NO_ERRORS)
+			throw new AssertionError(message + t.toString());
 		logger.log(Level.SEVERE, formatMsg(message), t);
 	}
 
