@@ -1,11 +1,10 @@
 package com.tigervnc.rfb.message;
 
-import static org.junit.Assert.*;
+import java.awt.Canvas;
 
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 
-import javax.swing.JFrame;
 
 import junit.framework.Assert;
 
@@ -13,7 +12,7 @@ import org.junit.Test;
 
 public class PointerEventTest {
 
-	private JFrame dummy = new JFrame();
+	private Canvas dummy = new Canvas();
 	private int x = 0;
 	private int y = 0;
 	private int when = 0;

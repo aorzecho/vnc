@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) 2012 ProfitBricks GmbH. All Rights Reserved.
+ */
 package com.tigervnc.rfb.message;
 
 import com.tigervnc.Util;
@@ -16,6 +19,13 @@ import static java.awt.event.KeyEvent.*;
 import java.util.regex.Pattern;
 import com.tigervnc.log.VncLogger;
 
+/**
+ * Remapping keyboard events and virtual codes. This class loads mappings from property files. Single set of property 
+ * files (desc.properties, keycode_remap.properties, keyevent_remap.properties) is called a 'fix' and can be 
+ * enabled/disabled at runtime.
+ *
+ * @author (2012) <a href="mailto:arkadiusz.orzechowski@profitbricks.com">Arkadiusz Orzechowski</a>
+ */
 public class KeyboardEventMap {
 
 	/**
@@ -138,22 +148,16 @@ public class KeyboardEventMap {
 	}
 
 	public List<EvtEntry> remapEvent(KeyEvent evt) {
-		EvtEntry entry = new EvtEntry(evt);
-		logger.debug(entry);
-		for (KbFix fix : fixes) {
-			List<EvtEntry> remappedEvt = fix.eventRemap.get(entry);
-			if (remappedEvt != null) {
-				logger.debug("remapEvent " + entry + " -> " + remappedEvt);
-				return remappedEvt;
-			}
-		}
-
-		//try again for keycode only mappings
-		if (evt.getKeyChar() != KeyEvent.CHAR_UNDEFINED) {
-			entry = new EvtEntry(evt.getID(),
-					new KeyEntry(evt.getKeyCode(), KeyEvent.CHAR_UNDEFINED, evt.getModifiersEx()));
-
+		EvtEntry[] searchKeys = new EvtEntry[] {// try exact match first (keycode+char+modifiers), keycode only at last
+			new EvtEntry(evt),
+			new EvtEntry(evt.getID(), new KeyEntry(evt.getKeyCode(), KeyEvent.CHAR_UNDEFINED, evt.getModifiersEx())),
+			new EvtEntry(evt.getID(), new KeyEntry(evt.getKeyCode(), evt.getKeyChar(), 0)),
+			new EvtEntry(evt.getID(), new KeyEntry(evt.getKeyCode(), KeyEvent.CHAR_UNDEFINED, 0))
+		};
+		
+		for (EvtEntry entry : searchKeys) {
 			for (KbFix fix : fixes) {
+				logger.debug(entry);
 				List<EvtEntry> remappedEvt = fix.eventRemap.get(entry);
 				if (remappedEvt != null) {
 					logger.debug("remapEvent " + entry + " -> " + remappedEvt);
@@ -178,7 +182,7 @@ public class KeyboardEventMap {
 				if (remappedKey != null) {
 					remappedKey = new KeyEntry(
 							remappedKey.keycode,
-							remappedKey.keysym == CHAR_UNDEFINED ? key.keysym : remappedKey.keysym,
+							remappedKey.keysym == CHAR_UNDEFINED ? evt.getKeyChar() : remappedKey.keysym,
 							remappedKey.getModifierMask() == 0 ? evt.getModifiersEx() : remappedKey.getModifierMask());
 					logger.debug("remapCode " + key + " -> " + remappedKey);
 					return remappedKey;
@@ -253,7 +257,7 @@ public class KeyboardEventMap {
 			}
 			while ((line = reader.readLine()) != null) {
 				String[] codes = CSV_SPLIT_PATTERN.split(line);
-				if (codes.length <= jvCol || codes.length <= xtCol) {
+				if (codes.length <= jvCol || codes.length <= xtCol || codes[jvCol].trim().isEmpty()) {
 					continue;
 				}
 				try {
@@ -345,8 +349,8 @@ public class KeyboardEventMap {
 		return remap;
 	}
 
-	private void loadManualFixes(String setupString) {
-		Map<String, String> fixes = loadMap("keyboardfix/fix.properties");
+	private void loadManualFixes(String setupString, String confFile) {
+		Map<String, String> fixes = loadMap(confFile);
 		Map<String, Boolean> setup = parseSetup(setupString);
 		for (Map.Entry<String, String> entry : fixes.entrySet()) {
 			String dir = "keyboardfix" + "/" + entry.getKey() + "/";
@@ -357,16 +361,16 @@ public class KeyboardEventMap {
 					params,
 					loadKeycodeRemap(dir + "keycode_remap.properties"),
 					loadEventRemap(dir + "keyevent_remap.properties"));
-			if (fix.optional) {
-				if (setup.containsKey(fix.id)) {
-					if (setup.get(fix.id)) {
-						applyFix(fix);
-						logger.debug("apply fix(setup): " + fix);
-					}
-				} else if (isActive(params)) {
-					logger.debug("apply fix: " + fix);
+			if (setup.containsKey(fix.id)) {
+				if (setup.get(fix.id)) {
 					applyFix(fix);
+					logger.debug("apply fix(setup): " + fix);
 				}
+			} else if (isActive(params)) {
+				logger.debug("apply fix: " + fix);
+				applyFix(fix);
+			}
+			if (fix.optional) {
 				String groupName = params.get("group");
 				if (groupName == null) {
 					groupName = "";
@@ -377,9 +381,6 @@ public class KeyboardEventMap {
 					manualFixes.put(groupName, fixGroup);
 				}
 				fixGroup.add(new ApplyKbFixAction(loadMap(dir + "desc.properties"), fix));
-			} else {
-				if (!setup.containsKey(fix.id) || setup.get(fix.id))
-					applyFix(fix);
 			}
 		}
 	}
@@ -455,11 +456,11 @@ public class KeyboardEventMap {
 	public static void init (String setup) {
 		if (instance != null)
 			throw new IllegalStateException("KeyboardEventMap already initialized!");
-		instance = new KeyboardEventMap(setup);
+		instance = new KeyboardEventMap(setup, "keyboardfix/fix.properties");
 	}
 	
-	private KeyboardEventMap(String setup) {
-		loadManualFixes(setup);
+	KeyboardEventMap(String setup, String confFile) {
+		loadManualFixes(setup, confFile);
 	}
 	
 }

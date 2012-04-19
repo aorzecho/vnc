@@ -2,26 +2,22 @@ package com.tigervnc.rfb.message;
 
 import java.awt.event.KeyEvent;
 import java.nio.ByteBuffer;
-import java.util.List;
-
-import javax.swing.JFrame;
 
 import junit.framework.Assert;
 
 import org.junit.Test;
 
-import com.tigervnc.Util;
 import com.tigervnc.rfb.Encodings;
 import com.tigervnc.rfb.message.KeyboardEvent.KeyUndefinedException;
+import java.awt.Canvas;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.Before;
-import org.junit.BeforeClass;
 
 
 public class KeyboardEventTest {
 
-	private JFrame dummy = new JFrame();
+	private Canvas dummy = new Canvas();
 
 	@Before
 	public void initKbMap () {
