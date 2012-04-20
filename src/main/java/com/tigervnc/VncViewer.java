@@ -27,15 +27,12 @@
 
 package com.tigervnc;
 
-import java.applet.Applet;
 import java.awt.Container;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridLayout;
-import java.awt.Label;
-import java.awt.Panel;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.WindowEvent;
@@ -44,12 +41,10 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.NoRouteToHostException;
-import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.management.RuntimeErrorException;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
@@ -67,8 +62,7 @@ import com.tigervnc.ui.ReloginPanel;
 import com.tigervnc.ui.VncCanvas;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.ResourceBundle;
 import java.util.logging.Level;
 import javax.swing.*;
 
@@ -78,7 +72,8 @@ public class VncViewer implements java.lang.Runnable,
 	public static VncLogger logger = VncLogger.getLogger(VncViewer.class);
 	public static boolean inAnApplet = true;
 	public static VncApplet applet;
-
+	public static final ResourceBundle labels = ResourceBundle.getBundle("LabelsBundle");
+	public static final ResourceBundle messages = ResourceBundle.getBundle("MessagesBundle");
 	//
 	// main() is called when run as a java program from the command line.
 	// It simply runs the applet inside a newly-created frame.
@@ -100,7 +95,7 @@ public class VncViewer implements java.lang.Runnable,
 	public VncCanvas vncCanvas;
 	public Panel canvasPanel;
 	public OptionsFrame options;
-	public JMenu sendKeysMenu;
+	public JMenu sendKeyMenu;
 
 	String cursorUpdatesDef;
 	String eightBitColorsDef;
@@ -125,12 +120,10 @@ public class VncViewer implements java.lang.Runnable,
 	
 	public VncViewer(String[] argv) {
 		mainArgs = argv;
-		
 		readParameters();
 		setLogLevel(log_level);
 		KeyboardEventMap.init(keyboardSetup);
 		initFrame();
-
 	}
 	
 	private void initFrame() {
@@ -141,7 +134,7 @@ public class VncViewer implements java.lang.Runnable,
 			vncFrame.setJMenuBar(createMenuBar());
 			vncFrame.addWindowListener(this);
 			vncFrame.addComponentListener(this);
-//                    vncFrame.addFocusListener(this);
+//		    vncFrame.addFocusListener(this);
 			if (inAnApplet) {
 				Panel gridPanel = new Panel(new GridLayout(0, 1));
 				Panel outerPanel = new Panel(new FlowLayout(FlowLayout.LEFT));
@@ -149,13 +142,13 @@ public class VncViewer implements java.lang.Runnable,
 				applet.getContentPane().setLayout(new FlowLayout(FlowLayout.LEFT, 30, 16));
 				applet.getContentPane().add(outerPanel);
 
-				gridPanel.add(button("Vnc Console", "requestFocus"));
+				gridPanel.add(button("requestFocus"));
 			}
 		} else {
 			vncContainer = applet.getContentPane();
 			applet.setJMenuBar(createMenuBar());
 //			applet.addComponentListener(this);
-//                    applet.addFocusListener(this);
+//		    applet.addFocusListener(this);
 		}
 		containerDefaultLayout = vncContainer.getLayout();
 		canvasPanel = new Panel();
@@ -198,51 +191,58 @@ public class VncViewer implements java.lang.Runnable,
 
 	private JMenuBar createMenuBar() {
 		JMenuBar menuBar = new JMenuBar();
-		menuBar.add(button("Disconnect", "destroy"));
-		menuBar.add(button("Options", "toggleOptions"));
-		menuBar.add(button("Refresh", "refresh"));
+		menuBar.add(button("destroy"));
+		menuBar.add(button("toggleOptions"));
+		menuBar.add(button("refresh"));
 
-		JMenu fixMenu = new JMenu("Keyboard setup");
-		menuBar.add(fixMenu);
-
+		menuBar.add(createKbSetupMenu());
+		menuBar.add(createSendKeyMenu());
+		return menuBar;
+	}
+	
+	private JMenu createKbSetupMenu() {
+		JMenu kbMenu = localize(new JMenu(), "menu.keyboard");;
 		for (String group : KeyboardEventMap.getInstance().manualFixes.keySet()) {
 			List<ApplyKbFixAction> fixes = KeyboardEventMap.getInstance().manualFixes.get(group);
 			if ("".equals(group) || fixes.size() == 1) { // checkboxes
 				for (ApplyKbFixAction action : fixes) {
-					JCheckBoxMenuItem item = new JCheckBoxMenuItem(action);
-					item.setSelected(action.isApplied());
-					fixMenu.add(item);
+					kbMenu.add(localize(new JCheckBoxMenuItem(action), "keyboardfix." + action.fix.id))
+									.setSelected(action.isApplied());
 				}
 			} else {
 				ButtonGroup bg = new ButtonGroup();
-				JRadioButtonMenuItem item = new JRadioButtonMenuItem("-- " + group + " --", true);
-				fixMenu.add(item);
+				JRadioButtonMenuItem item = localize(new JRadioButtonMenuItem(), "group." + group);
+				kbMenu.add(item).setSelected(true);
 				bg.add(item);
 				for (ApplyKbFixAction action : fixes) {
-					item = new JRadioButtonMenuItem(action);
+					item = localize(new JRadioButtonMenuItem(action), "keyboardfix." + action.fix.id);
 					item.addChangeListener(action);
-					fixMenu.add(item);
+					kbMenu.add(item);
 					bg.add(item);
 					bg.setSelected(item.getModel(), action.isApplied());
 				}
 			}
-			fixMenu.add(new JSeparator());
+			kbMenu.add(new JSeparator());
 		}
-
-		sendKeysMenu = new JMenu("Send key");
-		sendKeysMenu.setEnabled(false); //set in Options if input is enabled
-		menuBar.add(sendKeysMenu);
-		sendKeysMenu.add(menuItem("Ctrl+Alt+Del", "sendKey", new KeyEntry("VK_DELETE+ALT+CTRL")));
-		sendKeysMenu.add(menuItem("Ctrl+Escape", "sendKey", new KeyEntry("VK_ESCAPE+CTRL")));
-		sendKeysMenu.add(menuItem("Ctrl+Alt+BkSpace", "sendKey", new KeyEntry("VK_BACK_SPACE+ALT+CTRL")));
-		sendKeysMenu.add(menuItem("Ctrl+Alt+F1", "sendKey", new KeyEntry("VK_F1+ALT+CTRL")));
-		sendKeysMenu.add(menuItem("Ctrl+Alt+F7", "sendKey", new KeyEntry("VK_F7+ALT+CTRL")));
-		sendKeysMenu.add(menuItem("release modifier keys", "releaseModKeys"));
-		return menuBar;
+		return kbMenu;
+	}
+	
+	private JMenu createSendKeyMenu() {
+		sendKeyMenu = localize(new JMenu(), "menu.sendKey");
+		sendKeyMenu.setEnabled(false); //set in Options if input is enabled
+		sendKeyMenu.add(keyItem("VK_DELETE+ALT+CTRL"));
+		sendKeyMenu.add(keyItem("VK_TAB+ALT"));
+		sendKeyMenu.add(keyItem("VK_ESCAPE+CTRL"));
+		sendKeyMenu.add(keyItem("VK_BACK_SPACE+ALT+CTRL"));
+		sendKeyMenu.add(keyItem("VK_F1+ALT+CTRL"));
+		sendKeyMenu.add(keyItem("VK_F7+ALT+CTRL"));
+		sendKeyMenu.add(menuItem("releaseModKeys","releaseModKeys"));
+		    
+		return sendKeyMenu;
 	}
 
-	private JButton button(String label, String action, Object... args) {
-		JButton btn = new JButton(label);
+	private JButton button(String action, Object... args) {
+		JButton btn = localize(new JButton(), "button." + action);
 		try {
 			btn.addActionListener(new InvokeAction(this, action, args));
 		} catch (NoSuchMethodException ex) {
@@ -251,8 +251,12 @@ public class VncViewer implements java.lang.Runnable,
 		return btn;
 	}
 
-	private JMenuItem menuItem(String label, String action, Object... args) {
-		JMenuItem item = new JMenuItem(label);
+	private JMenuItem keyItem (String key) {
+		return menuItem(key,"sendKey", new KeyEntry(key));
+	}
+	
+	private JMenuItem menuItem(String label, String action, Object ... args) {
+		JMenuItem item = localize(new JMenuItem(label), "button." + label);
 		try {
 			item.addActionListener(new InvokeAction(this, action, args));
 		} catch (NoSuchMethodException ex) {
@@ -976,16 +980,16 @@ public class VncViewer implements java.lang.Runnable,
 	void showMessage(String msg) {
 		vncContainer.removeAll();
 
-		Label errLabel = new Label(msg, Label.CENTER);
+		JLabel errLabel = new JLabel(messages.containsKey(msg) ? messages.getString(msg) : msg, JLabel.CENTER);
 		errLabel.setFont(new Font("Helvetica", Font.PLAIN, 12));
 		if (offerRelogin) {
 
-			Panel gridPanel = new Panel(new GridLayout(0, 1));
-			Panel outerPanel = new Panel(new FlowLayout(FlowLayout.LEFT));
+			JPanel gridPanel = new JPanel(new GridLayout(0, 1));
+			JPanel outerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 			outerPanel.add(gridPanel);
 			vncContainer.setLayout(new FlowLayout(FlowLayout.LEFT, 30, 16));
 			vncContainer.add(outerPanel);
-			Panel textPanel = new Panel(new FlowLayout(FlowLayout.CENTER));
+			JPanel textPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
 			textPanel.add(errLabel);
 			gridPanel.add(textPanel);
 			gridPanel.add(new ReloginPanel(this));
@@ -1004,7 +1008,7 @@ public class VncViewer implements java.lang.Runnable,
 
 	public void start () {
 		logger.info("Starting vncViewer");
-        
+	
 	}
     
        
@@ -1022,7 +1026,7 @@ public class VncViewer implements java.lang.Runnable,
 		}
 		if (inAnApplet) {
 			VncEventPublisher.publish(VncEvent.DESTROY, "destroyed");
-			showMessage("Disconnected");
+			showMessage("disconnected");
 		} else {
 			if (vncFrame != null) {
 				vncFrame.dispose();
@@ -1134,5 +1138,14 @@ public class VncViewer implements java.lang.Runnable,
 	public void windowDeiconified(WindowEvent evt) {
 		logger.debug("windowDeiconified");
 	}
+
+	public static <T extends AbstractButton> T localize (T component, String key) {
+	    if (labels.containsKey("lbl." +key))
+		component.setText(labels.getString("lbl." +key));
+	    if (labels.containsKey("tip." + key))
+		component.setToolTipText(labels.getString("tip." + key));
+	    return component;
+	}
+	
 
 }

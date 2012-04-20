@@ -28,6 +28,7 @@ import java.awt.event.*;
 import java.applet.*;
 
 import com.tigervnc.VncViewer;
+import javax.swing.JButton;
 
 //
 // The panel which implements the Relogin button
@@ -37,8 +38,8 @@ public class ReloginPanel extends Panel implements ActionListener
 
     public static final String CMD_CLOSE = "close";
     public static final String CMD_RECONNECT = "reconnect";
-    Button reloginButton;
-    Button closeButton;
+    JButton reloginButton;
+    JButton closeButton;
     VncViewer viewer;
 
     //
@@ -48,12 +49,12 @@ public class ReloginPanel extends Panel implements ActionListener
     {
         viewer = v;
         setLayout(new FlowLayout(FlowLayout.CENTER));
-        reloginButton = new Button("Login again");
+        reloginButton = VncViewer.localize(new JButton("Login again"), "button.relogin");
         reloginButton.setActionCommand(CMD_RECONNECT);
         add(reloginButton);
         reloginButton.addActionListener(this);
 
-        closeButton = new Button("Close window");
+        closeButton = VncViewer.localize(new JButton("Close window"), "button.closeWin");
         closeButton.setActionCommand(CMD_CLOSE);
         add(closeButton);
         closeButton.addActionListener(this);

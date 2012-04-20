@@ -20,7 +20,7 @@ import com.tigervnc.log.VncLogger;
 public class ApplyKbFixAction implements Action, ChangeListener {
 
 	public static VncLogger logger = VncLogger.getLogger(ApplyKbFixAction.class);
-	final KeyboardEventMap.KbFix fix;
+	public final KeyboardEventMap.KbFix fix;
 	private Map props;
 	Set<PropertyChangeListener> changeListeners;
 

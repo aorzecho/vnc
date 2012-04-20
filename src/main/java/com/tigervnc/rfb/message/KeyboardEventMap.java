@@ -88,7 +88,7 @@ public class KeyboardEventMap {
 
 		final boolean optional;
 		final String group;
-		final String id;
+		public final String id;
 		final Integer priority;
 		final Map<EvtEntry, List<EvtEntry>> eventRemap;
 		final Map<KeyEntry, KeyEntry> codeRemap;
@@ -157,7 +157,6 @@ public class KeyboardEventMap {
 		
 		for (EvtEntry entry : searchKeys) {
 			for (KbFix fix : fixes) {
-				logger.debug(entry);
 				List<EvtEntry> remappedEvt = fix.eventRemap.get(entry);
 				if (remappedEvt != null) {
 					logger.debug("remapEvent " + entry + " -> " + remappedEvt);
@@ -175,7 +174,7 @@ public class KeyboardEventMap {
 			new KeyEntry(evt.getKeyCode(), evt.getKeyChar(), 0),
 			new KeyEntry(evt.getKeyCode(), KeyEvent.CHAR_UNDEFINED, 0)
 		};
-		logger.debug(searchKeys[0]);
+
 		for (KeyEntry key : searchKeys) {
 			for (KbFix fix : fixes) {
 				KeyEntry remappedKey = fix.codeRemap.get(key);

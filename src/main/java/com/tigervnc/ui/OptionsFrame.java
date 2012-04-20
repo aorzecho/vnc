@@ -37,8 +37,12 @@ import com.tigervnc.log.VncLogger;
 import com.tigervnc.VncViewer;
 import com.tigervnc.rfb.Encodings;
 import com.tigervnc.rfb.RfbProto;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
 
-public class OptionsFrame extends Frame implements WindowListener, ActionListener, ItemListener {
+public class OptionsFrame extends JFrame implements WindowListener, ActionListener, ItemListener {
 
   private static VncLogger logger = VncLogger.getLogger(VncViewer.class);
 	
@@ -86,9 +90,9 @@ public class OptionsFrame extends Frame implements WindowListener, ActionListene
     scaleCursorIndex     = 10,
     shareDesktopIndex    = 11;
 
-  public Label[] labels = new Label[names.length];
-  public Choice[] choices = new Choice[names.length];
-  public Button closeButton;
+  public JLabel[] labels = new JLabel[names.length];
+  public JComboBox[] choices = new JComboBox[names.length];
+  public JButton closeButton;
   public VncViewer viewer;
 
 
@@ -121,9 +125,10 @@ public class OptionsFrame extends Frame implements WindowListener, ActionListene
 
   public OptionsFrame(VncViewer v) {
     super("TigerVNC Options");
-
+	
     viewer = v;
 
+	setResizable(false);
     GridBagLayout gridbag = new GridBagLayout();
     setLayout(gridbag);
 
@@ -131,23 +136,21 @@ public class OptionsFrame extends Frame implements WindowListener, ActionListene
     gbc.fill = GridBagConstraints.BOTH;
 
     for (int i = 0; i < names.length; i++) {
-      labels[i] = new Label(names[i]);
+      labels[i] = new JLabel(names[i]);
+      if (VncViewer.labels.containsKey("lbl.option." + names[i]))
+          labels[i].setText(VncViewer.labels.getString("lbl.option." + names[i]));
       gbc.gridwidth = 1;
       gridbag.setConstraints(labels[i],gbc);
       add(labels[i]);
 
-      choices[i] = new Choice();
+      choices[i] = new JComboBox(values[i]);
       gbc.gridwidth = GridBagConstraints.REMAINDER;
       gridbag.setConstraints(choices[i],gbc);
       add(choices[i]);
       choices[i].addItemListener(this);
-
-      for (int j = 0; j < values[i].length; j++) {
-	choices[i].addItem(values[i][j]);
-      }
     }
 
-    closeButton = new Button("Close");
+    closeButton = new JButton("Close");
     gbc.gridwidth = GridBagConstraints.REMAINDER;
     gridbag.setConstraints(closeButton, gbc);
     add(closeButton);
@@ -159,17 +162,17 @@ public class OptionsFrame extends Frame implements WindowListener, ActionListene
 
     // Set up defaults
 
-    choices[encodingIndex].select("Auto");
-    choices[compressLevelIndex].select("Default");
-    choices[jpegQualityIndex].select("6");
-    choices[cursorUpdatesIndex].select("Enable");
-    choices[useCopyRectIndex].select("Yes");
-    choices[contUpdatesIndex].select("No");
-    choices[eightBitColorsIndex].select("No");
-    choices[mouseButtonIndex].select("Normal");
-    choices[viewOnlyIndex].select("No");
-    choices[scaleCursorIndex].select("No");
-    choices[shareDesktopIndex].select("Yes");
+    choices[encodingIndex].setSelectedItem("Auto");
+    choices[compressLevelIndex].setSelectedItem("Default");
+    choices[jpegQualityIndex].setSelectedItem("6");
+    choices[cursorUpdatesIndex].setSelectedItem("Enable");
+    choices[useCopyRectIndex].setSelectedItem("Yes");
+    choices[contUpdatesIndex].setSelectedItem("No");
+    choices[eightBitColorsIndex].setSelectedItem("No");
+    choices[mouseButtonIndex].setSelectedItem("Normal");
+    choices[viewOnlyIndex].setSelectedItem("No");
+    choices[scaleCursorIndex].setSelectedItem("No");
+    choices[shareDesktopIndex].setSelectedItem("Yes");
 
     // But let them be overridden by parameters
 
@@ -178,7 +181,7 @@ public class OptionsFrame extends Frame implements WindowListener, ActionListene
       if (s != null) {
 	for (int j = 0; j < values[i].length; j++) {
 	  if (s.equalsIgnoreCase(values[i][j])) {
-	    choices[i].select(j);
+	    choices[i].setSelectedItem(j);
 	  }
 	}
       }
@@ -190,9 +193,9 @@ public class OptionsFrame extends Frame implements WindowListener, ActionListene
     if (s == null) s = "100%";
     setScalingFactor(s);
     if (autoScale) {
-      choices[scalingFactorIndex].select("Auto");
+      choices[scalingFactorIndex].setSelectedItem("Auto");
     } else {
-      choices[scalingFactorIndex].select(s);
+      choices[scalingFactorIndex].setSelectedItem(s);
     }
 
   }
@@ -263,7 +266,7 @@ public class OptionsFrame extends Frame implements WindowListener, ActionListene
   public void disableContUpdates() {
     labels[contUpdatesIndex].setEnabled(false);
     choices[contUpdatesIndex].setEnabled(false);
-    choices[contUpdatesIndex].select("No");
+    choices[contUpdatesIndex].setSelectedItem("No");
     continuousUpdates = false;
   }
 
@@ -308,7 +311,7 @@ public class OptionsFrame extends Frame implements WindowListener, ActionListene
 
     try {
       compressLevel =
-        Integer.parseInt(choices[compressLevelIndex].getSelectedItem());
+        Integer.parseInt(choices[compressLevelIndex].getSelectedItem().toString());
     }
     catch (NumberFormatException e) {
       compressLevel = -1;
@@ -323,7 +326,7 @@ public class OptionsFrame extends Frame implements WindowListener, ActionListene
 
     try {
       jpegQuality =
-        Integer.parseInt(choices[jpegQualityIndex].getSelectedItem());
+        Integer.parseInt(choices[jpegQualityIndex].getSelectedItem().toString());
     }
     catch (NumberFormatException e) {
       jpegQuality = -1;
@@ -393,13 +396,13 @@ public class OptionsFrame extends Frame implements WindowListener, ActionListene
       = choices[viewOnlyIndex].getSelectedItem().equals("Yes");
     if (viewer.vncCanvas != null)
       viewer.vncCanvas.enableInput(!viewOnly);
-    if (viewer.sendKeysMenu != null)
-        viewer.sendKeysMenu.setEnabled(!viewOnly);
+    if (viewer.sendKeyMenu != null)
+        viewer.sendKeyMenu.setEnabled(!viewOnly);
 
     shareDesktop
       = choices[shareDesktopIndex].getSelectedItem().equals("Yes");
 
-    String scaleString = choices[scaleCursorIndex].getSelectedItem();
+    String scaleString = choices[scaleCursorIndex].getSelectedItem().toString();
     if (scaleString.endsWith("%"))
       scaleString = scaleString.substring(0, scaleString.length() - 1);
     try {
@@ -460,7 +463,7 @@ public class OptionsFrame extends Frame implements WindowListener, ActionListene
 
     } else if (source == choices[scalingFactorIndex]){
         // Tell VNC canvas that scaling factor has changed
-        setScalingFactor(choices[scalingFactorIndex].getSelectedItem());
+        setScalingFactor(choices[scalingFactorIndex].getSelectedItem().toString());
         if (viewer.vncCanvas != null)
           viewer.vncCanvas.setScalingFactor(scalingFactor);
     }
