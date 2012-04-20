@@ -307,6 +307,21 @@ public class KeyboardEventMapTest {
 		assertNotMapped(VK_4, 'B', SHIFT_DOWN_MASK | ALT_DOWN_MASK);
 		assertNotMapped(VK_4, 'B', ALT_DOWN_MASK);
 		assertNotMapped(VK_4, 'C', SHIFT_DOWN_MASK);
+
+		//VK_5=VK_Z
+		//VK_5+SHIFT=VK_Y
+		assertEquals(	expKey(VK_Z, 'B', 0), 
+						mapKey(VK_5, 'B', 0));
+
+		assertEquals(	expKey(VK_Y, 'B', SHIFT_DOWN_MASK), 
+						mapKey(VK_5, 'B', SHIFT_DOWN_MASK));
+
+		assertEquals(	expKey(VK_Z, 'B', ALT_DOWN_MASK), 
+						mapKey(VK_5, 'B', ALT_DOWN_MASK));
+
+		assertEquals(	expKey(VK_Z, 'B', ALT_DOWN_MASK | SHIFT_DOWN_MASK), 
+						mapKey(VK_5, 'B', ALT_DOWN_MASK | SHIFT_DOWN_MASK));
+
 	}
 
 // =============== priv/helper stuff =================================
