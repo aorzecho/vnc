@@ -775,11 +775,9 @@ public class VncViewer implements java.lang.Runnable,
 
 		String str;
 
-		// "Show Controls" set to "No" disables button panel.
-		showControls = true;
+		// "Show Controls" set to "Yes" to show controls at start.
 		str = readParameter("show_controls", false);
-		if (str != null && str.equalsIgnoreCase("No"))
-			showControls = false;
+		showControls = str != null && !str.equalsIgnoreCase("no");
 
 		// "New window" set to "No" disable creatind separate JFrame in applet.
 		separateWindow = true;
@@ -843,6 +841,14 @@ public class VncViewer implements java.lang.Runnable,
 	}
 
 	public String readParameter(String name, boolean required) {
+		if (inAnApplet) {
+			String s = applet.getParameter(name);
+			if ((s == null) && required) {
+				fatalError(name + " parameter not specified");
+			}
+			return s;
+		}
+
 		for (int i = 0; i < mainArgs.length; i += 2) {
 			if (mainArgs[i].equalsIgnoreCase(name)) {
 				try {
@@ -947,7 +953,7 @@ public class VncViewer implements java.lang.Runnable,
 			applet.evalJs("window.close()");
 		}
 	}
-    
+
 	//
 	// fatalError() - print out a fatal error message.
 	// FIXME: Do we really need two versions of the fatalError() method?
@@ -1010,8 +1016,7 @@ public class VncViewer implements java.lang.Runnable,
 		logger.info("Starting vncViewer");
 	
 	}
-    
-       
+
 	//
 	// This method is called before the vncViewer is destroyed.
 	//
@@ -1140,11 +1145,11 @@ public class VncViewer implements java.lang.Runnable,
 	}
 
 	public static <T extends AbstractButton> T localize (T component, String key) {
-	    if (labels.containsKey("lbl." +key))
-		component.setText(labels.getString("lbl." +key));
-	    if (labels.containsKey("tip." + key))
-		component.setToolTipText(labels.getString("tip." + key));
-	    return component;
+		if (labels.containsKey("lbl." +key))
+			component.setText(labels.getString("lbl." +key));
+		if (labels.containsKey("tip." + key))
+			component.setToolTipText(labels.getString("tip." + key));
+		return component;
 	}
 	
 

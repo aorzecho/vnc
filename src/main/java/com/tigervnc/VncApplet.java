@@ -13,26 +13,18 @@ public class VncApplet extends JApplet {
 
 	private static VncLogger logger = VncLogger.getLogger(VncApplet.class);
 
-	private String window_title;
-	private String port;
-	private String host;
-	private String log_level;
-	private String keyboard_setup;
-	private String show_controls;
-	private String new_window;
 	private String id;
-	//	private JSObject js;
 	private String callback;
 	private Thread jsExecutorThread;
 	private	BlockingDeque<String> jsScriptQueue = new LinkedBlockingDeque<String>(10);
 	private JsExecutor jsExecutor;
 	public VncViewer vncViewer;
-	
+
 	private static class JsExecutor implements Runnable {
 		
 		private final Applet applet;
 		private final BlockingDeque<String> scriptQueue;
-		Method getWindowMethod;
+		Method getWindowMethod;//this is to avoid dependency on plugin lib...
 		Method evalMethod;
 		Class jsObjClazz;
 		
@@ -80,14 +72,7 @@ public class VncApplet extends JApplet {
 	@Override
 	public void init() {
 		callback = getRequiredParameter("callback");
-		port = getRequiredParameter("port");
-		host = getRequiredParameter("host");
 		id = getRequiredParameter("id");
-		window_title = getParameter("title", "Remote Desktop Viewer");
-		log_level = getParameter("log_level", "info");
-		show_controls = getParameter("show_controls", "no");
-		new_window = getParameter("new_window", "yes");
-		keyboard_setup = getParameter("keyboard_setup", null);
 		
 		subscribe_to_vnc_events();
 
@@ -101,25 +86,25 @@ public class VncApplet extends JApplet {
 		publishEvent(VncEvent.INIT, id);
 	}
 	
-        @Override
-        public void destroy () {
-            vncViewer.destroy();
-			jsExecutorThread.interrupt();
-            super.destroy();
-        }
-        
-        @Override
-        public void stop () {
-            vncViewer.stop();
-            super.stop();
-        }
-        
-        @Override
-        public void start () {
-            vncViewer.start();
-            super.start();
-        }
-        
+	@Override
+	public void destroy() {
+		vncViewer.destroy();
+		jsExecutorThread.interrupt();
+		super.destroy();
+	}
+
+	@Override
+	public void stop() {
+		vncViewer.stop();
+		super.stop();
+	}
+
+	@Override
+	public void start() {
+		vncViewer.start();
+		super.start();
+	}
+
 	private void subscribe_to_vnc_events() {
 		VncEventPublisher.subscribe(new VncEventSubscriber(){
 			
@@ -148,15 +133,7 @@ public class VncApplet extends JApplet {
 		// FF and Safari on the Mac.
 		VncViewer.inAnApplet = true;
 		VncViewer.applet = this;
-		vncViewer = new VncViewer(new String[]{
-					"host", host,
-					"port", port,
-					"window_title", window_title,
-					"show_controls", show_controls,
-					"new_window", new_window,
-					"keyboard_setup", keyboard_setup,
-					"log_level", log_level
-				});
+		vncViewer = new VncViewer(null);
 
 		toFront();
 	}
@@ -166,13 +143,10 @@ public class VncApplet extends JApplet {
 		setVisible(true);
 		requestFocus();
 	}
-        
-        
-    public void resizeBrowserWindow(int x, int y) {
 
-            evalJs("setViewportSize(" + x + "," + y + ")");
-
-    }
+	public void resizeBrowserWindow(int x, int y) {
+		evalJs("setViewportSize(" + x + "," + y + ")");
+	}
 
 	protected String getParameter(String name, String default_value) {
 		String value = getParameter(name);
