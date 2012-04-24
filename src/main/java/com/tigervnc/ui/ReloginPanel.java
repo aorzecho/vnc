@@ -67,7 +67,6 @@ public class ReloginPanel extends Panel implements ActionListener
     public synchronized void actionPerformed(ActionEvent evt)
     {
         if (CMD_RECONNECT == evt.getActionCommand()) {
-            viewer.disconnect();
             viewer.connect();
         } else if (CMD_CLOSE == evt.getActionCommand()) {
             viewer.close();

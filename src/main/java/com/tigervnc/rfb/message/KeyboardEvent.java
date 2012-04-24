@@ -21,26 +21,10 @@ public class KeyboardEvent implements IServerMessage {
 	
 	private static VncLogger logger = VncLogger.getLogger(KeyboardEvent.class);
 	
-	public class KeyUndefinedException extends Exception {
+	public static class KeyUndefinedException extends Exception {
 		public KeyUndefinedException (String msg){
 			super(msg);
 		}
-	}
-
-	// Set from the main vnc response loop VncViewer, refactor that...
-	public static boolean extended_key_event = false;
-
-	/** Maps from keycode to keysym for all currently pressed keys. */
-	private static Map<Integer, Integer> keys_pressed = new HashMap<Integer, Integer>();
-
-	/** Get all pressed keys as a map from keycode to keysym */
-	public static Map<Integer, Integer> getPressedKeys() throws IOException {
-		return keys_pressed;
-	}
-
-	/** Clear all pressed keys */
-	public static void clearPressedKeys() {
-		keys_pressed.clear();
 	}
 	
 	public static final int X11_BACK_SPACE = 0xff08;
@@ -59,12 +43,14 @@ public class KeyboardEvent implements IServerMessage {
 	protected boolean _press;
 	protected List<KeyboardEvent> _extra_preceding_events;
 
-	protected static boolean _alt_gr_pressed = false;
 	private boolean bypass_original_event = false;
+	
+	private final VncViewer.Session session;
 
-	public KeyboardEvent(KeyEvent evt) throws KeyUndefinedException {
+	public KeyboardEvent(VncViewer.Session session, KeyEvent evt) throws KeyUndefinedException {
 		
-		KeyEntry key = KeyboardEventMap.getInstance().remapCodes(evt);
+		this.session = session;
+		KeyEntry key = session.kbEvtMap.remapCodes(evt);
 		_keycode = key.keycode;
 		_keysym = key.keysym;
 		_press = (evt.getID() == KeyEvent.KEY_PRESSED);
@@ -75,16 +61,18 @@ public class KeyboardEvent implements IServerMessage {
 		// only important if not using extended key events
 		// the kvm vnc client ignores the keysym.
 		// wonder why the keysym is required in that case.
-		if(extended_key_event){
+		if(session.extended_key_event){
 			handleUndefinedJavaKeysymsConvert2x11(_keycode);
 		}
 	}
 
-	public KeyboardEvent(int keysym, int keycode, boolean down) {
+	public KeyboardEvent(VncViewer.Session session, int keysym, int keycode, boolean down) {
+
+		this.session = session;
 		this._keysym = keysym;
 		this._keycode = keycode;
 		this._press = down;
-		if(extended_key_event){
+		if(session.extended_key_event){
 			handleUndefinedJavaKeysymsConvert2x11(keycode);
 		}
 	}
@@ -103,43 +91,41 @@ public class KeyboardEvent implements IServerMessage {
 		if (_keycode == KeyEvent.VK_ALT) {
 			if (evt.isControlDown()) {
 				bypass_original_event = true;
-				if(!_alt_gr_pressed){
-					_alt_gr_pressed = true;
+				if(!session._alt_gr_pressed){
+					session._alt_gr_pressed = true;
 					// release the by user pressed control key
-					addExtraEvent(new KeyboardEvent(X11_CONTROL,KeyEvent.VK_CONTROL, false));
-					KeyboardEvent alt_gr_press = new KeyboardEvent(X11_ALT_GRAPH, KeyEvent.VK_ALT_GRAPH, true);
-					addExtraEvent(alt_gr_press);
+					addExtraEvent(X11_CONTROL,KeyEvent.VK_CONTROL, false);
+					addExtraEvent(X11_ALT_GRAPH, KeyEvent.VK_ALT_GRAPH, true);
 					
 					// ensures that it is released when ctrl+alt is used on linux to shift to anther desktop
-					keys_pressed.put(alt_gr_press._keycode, alt_gr_press._keysym);
+					session.keys_pressed.put(KeyEvent.VK_ALT_GRAPH, X11_ALT_GRAPH);
 				}
 			}
-			else if(_alt_gr_pressed){
+			else if(session._alt_gr_pressed){
 				bypass_original_event = true;
 				// release
-				addExtraEvent(new KeyboardEvent(X11_ALT_GRAPH, KeyEvent.VK_ALT_GRAPH, false));	
-				_alt_gr_pressed = false;				
+				addExtraEvent(X11_ALT_GRAPH, KeyEvent.VK_ALT_GRAPH, false);	
+				session._alt_gr_pressed = false;				
 			}
 		}
 		else if(_keycode == KeyEvent.VK_CONTROL){
 			if(evt.isAltDown()){
 				bypass_original_event = true;
-				if(!_alt_gr_pressed){
-					_alt_gr_pressed = true;
+				if(!session._alt_gr_pressed){
+					session._alt_gr_pressed = true;
 					// release the by user pressed alt key
-					addExtraEvent(new KeyboardEvent(X11_ALT,KeyEvent.VK_ALT, false));	
+					addExtraEvent(X11_ALT,KeyEvent.VK_ALT, false);	
 					
-					KeyboardEvent alt_gr_press = new KeyboardEvent(X11_ALT_GRAPH, KeyEvent.VK_ALT_GRAPH, true);
-					addExtraEvent(alt_gr_press);
+					addExtraEvent(X11_ALT_GRAPH, KeyEvent.VK_ALT_GRAPH, true);
 					
-					keys_pressed.put(alt_gr_press._keycode, alt_gr_press._keysym);
+					session.keys_pressed.put(KeyEvent.VK_ALT_GRAPH, X11_ALT_GRAPH);
 				}
 			}
-			else if(_alt_gr_pressed){
+			else if(session._alt_gr_pressed){
 				bypass_original_event = true;
 				// release
-				addExtraEvent(new KeyboardEvent(X11_ALT_GRAPH, KeyEvent.VK_ALT_GRAPH, false));
-				_alt_gr_pressed = false;
+				addExtraEvent(X11_ALT_GRAPH, KeyEvent.VK_ALT_GRAPH, false);
+				session._alt_gr_pressed = false;
 			}
 		}
 		switch (_keycode) {
@@ -147,9 +133,9 @@ public class KeyboardEvent implements IServerMessage {
 			if (!(evt.isAltDown() && evt.isControlDown())) {
 				return;
 			}
-			addExtraEvent(new KeyboardEvent(X11_CONTROL, KeyEvent.VK_CONTROL, _press));
-			addExtraEvent(new KeyboardEvent(X11_ALT, KeyEvent.VK_ALT, _press));
-			addExtraEvent(new KeyboardEvent(X11_DELETE, KeyEvent.VK_DELETE, _press));
+			addExtraEvent(X11_CONTROL, KeyEvent.VK_CONTROL, _press);
+			addExtraEvent(X11_ALT, KeyEvent.VK_ALT, _press);
+			addExtraEvent(X11_DELETE, KeyEvent.VK_DELETE, _press);
 			break;
 		case KeyEvent.VK_META: 		
 			// No Win key on Mac use META (cmd)
@@ -160,19 +146,19 @@ public class KeyboardEvent implements IServerMessage {
 			if (!(evt.isAltDown() && evt.isControlDown())) {
 				return;
 			}
-			addExtraEvent(new KeyboardEvent(X11_CONTROL, KeyEvent.VK_CONTROL, _press));
-			addExtraEvent(new KeyboardEvent(X11_ALT, KeyEvent.VK_ALT, _press));
-			addExtraEvent(new KeyboardEvent(X11_DELETE, KeyEvent.VK_DELETE, _press));
+			addExtraEvent(X11_CONTROL, KeyEvent.VK_CONTROL, _press);
+			addExtraEvent(X11_ALT, KeyEvent.VK_ALT, _press);
+			addExtraEvent(X11_DELETE, KeyEvent.VK_DELETE, _press);
 			break;
 		}
 	}
 
-	private void addExtraEvent(KeyboardEvent evt) {
+	private void addExtraEvent(int _keysym, int _keycode, boolean _press) {
 		if (_extra_preceding_events == null) {
 			// max two additional at the moment
 			_extra_preceding_events = new LinkedList<KeyboardEvent>();
 		}
-		_extra_preceding_events.add(evt);
+		_extra_preceding_events.add(new KeyboardEvent(session, _keysym, _keycode, _press));
 	}
 	
 	public byte[] getBytes() {
@@ -228,7 +214,7 @@ public class KeyboardEvent implements IServerMessage {
 
 		logger.debug(this);
 		byte[] ev;
-		if (extended_key_event) {
+		if (session.extended_key_event) {
 			ev = getExtendedKeyEvent();
 		} else {
 			ev = getSimpleKeyEvent();
@@ -285,8 +271,8 @@ public class KeyboardEvent implements IServerMessage {
 			// Make it possible to send with Alt key instead.
 			if(evt.isAltDown()){
 				bypass_original_event = true;
-				addExtraEvent(new KeyboardEvent(_keysym,KeyEvent.VK_ALT_GRAPH, _press));
-				addExtraEvent(new KeyboardEvent(_keysym,KeyEvent.VK_LESS, _press));
+				addExtraEvent(_keysym,KeyEvent.VK_ALT_GRAPH, _press);
+				addExtraEvent(_keysym,KeyEvent.VK_LESS, _press);
 			}
 			if(keychar == '<' || keychar == '>') {
 				_keycode = KeyEvent.VK_LESS;	
@@ -302,15 +288,15 @@ public class KeyboardEvent implements IServerMessage {
 		// keep track of key presses, and do press ourself if it wasn't 
 		// triggered.
 		if (_press) {
-			keys_pressed.put(_keycode, _keysym);
+			session.keys_pressed.put(_keycode, _keysym);
 		} else {
-			if (!keys_pressed.containsKey(_keycode)) {
+			if (!session.keys_pressed.containsKey(_keycode)) {
 				// Do press ourself.
 				logger.debug("Writing key pressed event for " + (char)_keysym
 						+ " keycode: " + _keycode);
-				addExtraEvent(new KeyboardEvent(_keysym, _keycode, true));
+				addExtraEvent(_keysym, _keycode, true);
 			} else {
-				keys_pressed.remove(_keycode);
+				session.keys_pressed.remove(_keycode);
 			}
 		}		
 	}
@@ -331,7 +317,7 @@ public class KeyboardEvent implements IServerMessage {
 
 	public String toString(){
 		return String.format("%s key event, keysym:%d keychar:'%s' keycode:%d(%s) %s", new Object[] {
-			extended_key_event ? "extended" : "simple ",
+			session.extended_key_event ? "extended" : "simple ",
 			_keysym,
 			(char) _keysym,
 			_keycode,

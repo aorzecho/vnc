@@ -141,6 +141,7 @@ public class KeyboardEventMap {
 	private final SortedSet<KbFix> fixes = Collections.synchronizedSortedSet(new TreeSet<KbFix>());
 	public final Map<String, List<ApplyKbFixAction>> manualFixes = new HashMap<String, List<ApplyKbFixAction>>();
 	public static final String CURRENT_OS;
+	private final VncEventPublisher eventPublisher;
 
 // ===================== mapping methods ===============================
 	public static Integer java2rfb(int keycode) {
@@ -193,14 +194,14 @@ public class KeyboardEventMap {
 
 //============  enable/disable fixes =========================    
 	public synchronized void applyFix(KbFix fix) {
-		if (fixes.add(fix) && instance != null) { //initialized
-			VncEventPublisher.publish(VncEvent.UPD_SETUP, getSetup());
+		if (fixes.add(fix)) { //initialized
+			eventPublisher.publish(VncEvent.UPD_SETUP, getSetup());
 		}
 	}
 
 	public synchronized void unapplyFix(KbFix fix) {
-		if (fixes.remove(fix) && instance != null) { //initialized
-			VncEventPublisher.publish(VncEvent.UPD_SETUP, getSetup());
+		if (fixes.remove(fix)) { //initialized
+			eventPublisher.publish(VncEvent.UPD_SETUP, getSetup());
 		}
 	}
 
@@ -379,7 +380,7 @@ public class KeyboardEventMap {
 					fixGroup = new ArrayList<ApplyKbFixAction>();
 					manualFixes.put(groupName, fixGroup);
 				}
-				fixGroup.add(new ApplyKbFixAction(loadMap(dir + "desc.properties"), fix));
+				fixGroup.add(new ApplyKbFixAction(loadMap(dir + "desc.properties"), fix, this));
 			}
 		}
 	}
@@ -443,23 +444,13 @@ public class KeyboardEventMap {
 		logger.info("CURRENT_OS: " + CURRENT_OS);
 		loadJava2RfbKeymap();
 	}
-
-	private static KeyboardEventMap instance;
 	
-	public static KeyboardEventMap getInstance () {
-		if (instance == null)
-			throw new IllegalStateException("KeyboardEventMap not initialized!");
-		return instance;
+	public KeyboardEventMap(VncEventPublisher eventPublisher, String setup) {
+		this(eventPublisher, setup, "keyboardfix/fix.properties");
 	}
-	
-	public static void init (String setup) {
-		if (instance != null)
-			throw new IllegalStateException("KeyboardEventMap already initialized!");
-		instance = new KeyboardEventMap(setup, "keyboardfix/fix.properties");
-	}
-	
-	KeyboardEventMap(String setup, String confFile) {
-		loadManualFixes(setup, confFile);
+	public KeyboardEventMap(VncEventPublisher eventPublisher, String setup, String configFile) {
+		this.eventPublisher = eventPublisher;
+		loadManualFixes(setup, configFile);
 	}
 	
 }

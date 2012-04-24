@@ -107,6 +107,7 @@ public class VncCanvas extends Canvas implements MouseListener, MouseWheelListen
 	CopyRectDecoder copyRectDecoder;
 
 	private final Thread mouseThread;
+	private final CanvasKeyListener keyListener;
 	
 	// Base decoder decoders array
 	RawDecoder[] decoders = null;
@@ -208,7 +209,8 @@ public class VncCanvas extends Canvas implements MouseListener, MouseWheelListen
 
 		// Enable mouse and keyboard event listeners.
 		setFocusTraversalKeysEnabled(false); // enables tab key events
-		addKeyListener(new CanvasKeyListener(this));
+		keyListener = new CanvasKeyListener(this);
+		addKeyListener(keyListener);
 		addMouseListener(this);
 		addMouseMotionListener(this);
 		addMouseWheelListener(this);
@@ -421,6 +423,7 @@ public class VncCanvas extends Canvas implements MouseListener, MouseWheelListen
 						statsRestarted = true;
 					} else if (statNumUpdates == viewer.debugStatsMeasureUpdates
 							&& statsRestarted) {
+						logger.debug("disconnecting - statNumUpdates == viewer.debugStatsMeasureUpdates");
 						viewer.disconnect();
 					}
 
@@ -503,7 +506,7 @@ public class VncCanvas extends Canvas implements MouseListener, MouseWheelListen
 							handleTightRect(rx, ry, rw, rh);
 							break;
 						case Encodings.ENCODING_EXTENDED_KEY_EVENT:
-							KeyboardEvent.extended_key_event = true;
+							viewer.session.extended_key_event = true;
 							rfb.resendFramebufferUpdateRequest();
 							break;
 						default:
@@ -617,9 +620,9 @@ public class VncCanvas extends Canvas implements MouseListener, MouseWheelListen
 			}
 		} catch (EOFException e) {
 			logger.info("Stream closed (EOF), closing ...");
-			viewer.destroy();
+			viewer.onRfbDisconnected();
 		} finally {
-			mouseThread.interrupt();
+			close();
 		}
 	}
 
@@ -1268,4 +1271,12 @@ public class VncCanvas extends Canvas implements MouseListener, MouseWheelListen
 			}
 		}
 	}
+	
+	private void close() {
+		if (keyListener != null)
+			removeKeyListener(keyListener);
+		if (mouseThread != null)
+			mouseThread.interrupt();
+	}
+		
 }

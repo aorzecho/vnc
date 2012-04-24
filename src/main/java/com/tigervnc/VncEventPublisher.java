@@ -9,17 +9,17 @@ public class VncEventPublisher {
 
 	static VncLogger logger = VncLogger.getLogger(VncEventPublisher.class);
 	
-	private static List<VncEventSubscriber> subscribers = new ArrayList<VncEventSubscriber>();
+	private List<VncEventSubscriber> subscribers = new ArrayList<VncEventSubscriber>();
 	
-	public static void subscribe(VncEventSubscriber listener){
+	public void subscribe(VncEventSubscriber listener){
 		subscribers.add(listener);
 	}
 	
-	public static void publish(VncEvent e, String txt){
+	public void publish(VncEvent e, String txt){
 		publish(e, txt, null);
 	}
 	
-	public static void publish(VncEvent e, String txt, Exception ex){
+	public void publish(VncEvent e, String txt, Exception ex){
 		logger.info("publish: " + e + " " + txt + (ex != null ? " " + ex : ""));
 		
 		switch(e){

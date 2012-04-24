@@ -3,6 +3,7 @@
  */
 package com.tigervnc.rfb.message;
 
+import com.tigervnc.VncEventPublisher;
 import com.tigervnc.log.VncLogger;
 import java.awt.Canvas;
 import java.awt.event.KeyEvent;
@@ -30,7 +31,6 @@ public class KeyboardEventMapTest {
 	public static void initKbMap () {
 		try {
 			VncLogger.ASSERT_NO_ERRORS = true;
-			KeyboardEventMap.init(null);
 		}  catch (IllegalStateException ignore) {}
 	}
 
@@ -332,7 +332,7 @@ public class KeyboardEventMapTest {
 								| SHIFT_DOWN_MASK 
 								| META_DOWN_MASK;
 
-	private KeyboardEventMap testKBMapper = new KeyboardEventMap(null, "keyboardfix/test_fix.properties");
+	private KeyboardEventMap testKBMapper = new KeyboardEventMap(new VncEventPublisher(), null, "keyboardfix/test_fix.properties");
 
 	private Canvas dummy = new Canvas();
 	

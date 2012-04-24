@@ -61,7 +61,7 @@ public class RfbProto {
 	String host;
 	int port;
 	Socket sock;
-	static OutputStream os;
+	OutputStream os;
 	public SessionRecorder rec;
 	public boolean inNormalProtocol = false;
 	public VncViewer viewer;
@@ -316,12 +316,12 @@ public class RfbProto {
 	}
 	
 	public void writeKeyboardEvent(KeyEvent evt) throws IOException, KeyUndefinedException {
-		KeyboardEvent kevent = new KeyboardEvent(evt);
+		KeyboardEvent kevent = new KeyboardEvent(viewer.session, evt);
 		os.write(kevent.getBytes());
 	}
 	
 	public void writeKeyboardEvent(int keysym, int keycode, boolean press) throws IOException {
-		KeyboardEvent kevent = new KeyboardEvent(keysym, keycode, press);
+		KeyboardEvent kevent = new KeyboardEvent(viewer.session, keysym, keycode, press);
 		os.write(kevent.getBytes());
 	}
 	
@@ -805,11 +805,11 @@ public class RfbProto {
 	}
 	
 	public void releaseAllKeys() throws IOException{
-		for (Map.Entry<Integer, Integer> e : KeyboardEvent.getPressedKeys().entrySet()) {
-			KeyboardEvent ev = new KeyboardEvent(e.getValue(), e.getKey(), false); 
+		for (Map.Entry<Integer, Integer> e : viewer.session.getPressedKeys().entrySet()) {
+			KeyboardEvent ev = new KeyboardEvent(viewer.session, e.getValue(), e.getKey(), false); 
 			os.write(ev.getBytes());
 		}
-		KeyboardEvent.clearPressedKeys();
+		viewer.session.clearPressedKeys();
 	}
 	
 	

@@ -1,5 +1,7 @@
 package com.tigervnc.rfb.message;
 
+import com.tigervnc.VncEventPublisher;
+import com.tigervnc.VncViewer;
 import com.tigervnc.log.VncLogger;
 import java.awt.event.KeyEvent;
 import java.nio.ByteBuffer;
@@ -20,19 +22,23 @@ public class KeyboardEventTest {
 
 	private Canvas dummy = new Canvas();
 
+	static VncViewer.Session session;
+	
 	@BeforeClass
 	public static void initKbMap () {
 		try {
-			VncLogger.ASSERT_NO_ERRORS = true; // fail on errors/warnings
-			KeyboardEventMap.init(null);
+			VncLogger.ASSERT_NO_ERRORS = true;
+			session = new VncViewer.Session();
+			session.kbEvtMap = new KeyboardEventMap(new VncEventPublisher(), null);
 		}  catch (IllegalStateException ignore) {}
 	}
+
 	
 	@Test
 	public void test_getExtendedKeyEvent(){
-		KeyboardEvent.extended_key_event = true;
+		session.extended_key_event = true;
 		boolean down = true;
-		byte[] key_ev = new KeyboardEvent((char)1,KeyEvent.VK_1,down).getBytes();		
+		byte[] key_ev = new KeyboardEvent(session, (char)1,KeyEvent.VK_1,down).getBytes();		
 		Assert.assertEquals(255, Encodings.QEMU);
 //		    =============== ==================== ========== =======================
 //			No. of bytes    Type                 [Value]    Description
@@ -57,9 +63,9 @@ public class KeyboardEventTest {
 	
 	@Test
 	public void test_ctrl_and_alt_should_produce_alt_gr_event() throws KeyUndefinedException{
-		KeyboardEvent.extended_key_event = true;
+		session.extended_key_event = true;
 		int modifiers = KeyEvent.CTRL_DOWN_MASK;
-		KeyboardEvent rfb_ke = new KeyboardEvent(new KeyEvent(dummy, KeyEvent.KEY_PRESSED, 0, modifiers, KeyEvent.VK_ALT));
+		KeyboardEvent rfb_ke = new KeyboardEvent(session, new KeyEvent(dummy, KeyEvent.KEY_PRESSED, 0, modifiers, KeyEvent.VK_ALT));
 		
 		// ctrl + alt
 		Assert.assertEquals(rfb_ke._extra_preceding_events.size(), 2);
@@ -75,11 +81,11 @@ public class KeyboardEventTest {
 		Assert.assertEquals(KeyEvent.VK_ALT_GRAPH, alt_gr_press_event._keycode);
 		Assert.assertEquals(true, alt_gr_press_event._press);
 		
-		KeyboardEvent._alt_gr_pressed = false; // reset
+		session._alt_gr_pressed = false; // reset
 		
 		// the other way around: alt + ctrl
 		modifiers = KeyEvent.ALT_DOWN_MASK;
-		rfb_ke = new KeyboardEvent(new KeyEvent(dummy, KeyEvent.KEY_PRESSED, 0, modifiers, KeyEvent.VK_CONTROL));
+		rfb_ke = new KeyboardEvent(session, new KeyEvent(dummy, KeyEvent.KEY_PRESSED, 0, modifiers, KeyEvent.VK_CONTROL));
 		
 		Assert.assertEquals(rfb_ke._extra_preceding_events.size(), 2);
 		KeyboardEvent alt_release_event = rfb_ke._extra_preceding_events.get(0);
@@ -99,8 +105,8 @@ public class KeyboardEventTest {
 	public void test_ctrl_and_alt_should_produce_alt_gr_release() throws KeyUndefinedException{
 		// ctrl + alt release
 		int modifiers = 0; // modifiers are released
-		KeyboardEvent._alt_gr_pressed = true;
-		KeyboardEvent rfb_ke = new KeyboardEvent(new KeyEvent(dummy, KeyEvent.KEY_RELEASED, 0, modifiers, KeyEvent.VK_ALT));
+		session._alt_gr_pressed = true;
+		KeyboardEvent rfb_ke = new KeyboardEvent(session, new KeyEvent(dummy, KeyEvent.KEY_RELEASED, 0, modifiers, KeyEvent.VK_ALT));
 		KeyboardEvent alt_gr_release_event = rfb_ke._extra_preceding_events.get(0);
 		
 		// should release alt gr
@@ -108,8 +114,8 @@ public class KeyboardEventTest {
 		Assert.assertEquals(false, alt_gr_release_event._press);
 		
 		// the other way around: alt + ctrl
-		KeyboardEvent._alt_gr_pressed = true;
-		rfb_ke = new KeyboardEvent(new KeyEvent(dummy, KeyEvent.KEY_RELEASED, 0, modifiers, KeyEvent.VK_CONTROL));
+		session._alt_gr_pressed = true;
+		rfb_ke = new KeyboardEvent(session, new KeyEvent(dummy, KeyEvent.KEY_RELEASED, 0, modifiers, KeyEvent.VK_CONTROL));
 		alt_gr_release_event = rfb_ke._extra_preceding_events.get(0);
 		
 		// should release alt
@@ -129,7 +135,7 @@ public class KeyboardEventTest {
 
 
 		for (Map.Entry<Character, Integer> evt : char2vk.entrySet()) {
-			KeyboardEvent e = new KeyboardEvent(
+			KeyboardEvent e = new KeyboardEvent(session, 
 					new KeyEvent(dummy, KeyEvent.KEY_RELEASED, System.currentTimeMillis(),
 					0, KeyEvent.VK_UNDEFINED, evt.getKey()));
 			Assert.assertEquals(e._keycode, evt.getValue().intValue());

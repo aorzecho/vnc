@@ -21,12 +21,14 @@ public class ApplyKbFixAction implements Action, ChangeListener {
 
 	public static VncLogger logger = VncLogger.getLogger(ApplyKbFixAction.class);
 	public final KeyboardEventMap.KbFix fix;
+	private final KeyboardEventMap kbMap;
 	private Map props;
 	Set<PropertyChangeListener> changeListeners;
 
-	public ApplyKbFixAction(Map props, KeyboardEventMap.KbFix fix) {
+	public ApplyKbFixAction(Map props, KeyboardEventMap.KbFix fix, KeyboardEventMap kbMap) {
 		this.fix = fix;
 		this.props = props;
+		this.kbMap = kbMap;
 		changeListeners = new HashSet<PropertyChangeListener>();
 	}
 
@@ -73,7 +75,7 @@ public class ApplyKbFixAction implements Action, ChangeListener {
 	}
 
 	public boolean isApplied() {
-		return KeyboardEventMap.getInstance().isApplied(fix);
+		return kbMap.isApplied(fix);
 	}
 
 	@Override
@@ -82,11 +84,11 @@ public class ApplyKbFixAction implements Action, ChangeListener {
 	}
 
 	private void update(boolean selected) {
-		if (selected && !KeyboardEventMap.getInstance().isApplied(fix)) {
-			KeyboardEventMap.getInstance().applyFix(fix);
+		if (selected && !kbMap.isApplied(fix)) {
+			kbMap.applyFix(fix);
 			logger.info("enabled " + props.get(NAME));
-		} else if (!selected && KeyboardEventMap.getInstance().isApplied(fix)) {
-			KeyboardEventMap.getInstance().unapplyFix(fix);
+		} else if (!selected && kbMap.isApplied(fix)) {
+			kbMap.unapplyFix(fix);
 			logger.info("disabled " + props.get(NAME));
 		}
 	}

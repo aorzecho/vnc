@@ -74,8 +74,6 @@ public class VncApplet extends JApplet {
 		callback = getRequiredParameter("callback");
 		id = getRequiredParameter("id");
 		
-		subscribe_to_vnc_events();
-
 		jsExecutor = new JsExecutor(this, jsScriptQueue);
 		jsExecutorThread = new Thread(jsExecutor);
 		jsExecutorThread.setName("jsExecutorThread");
@@ -105,8 +103,8 @@ public class VncApplet extends JApplet {
 		super.start();
 	}
 
-	private void subscribe_to_vnc_events() {
-		VncEventPublisher.subscribe(new VncEventSubscriber(){
+	private VncEventSubscriber newEventSubscriber() {
+		return new VncEventSubscriber(){
 			
 			@Override
 			public void connectionError(String msg, Exception e){
@@ -125,15 +123,13 @@ public class VncApplet extends JApplet {
 				
 			}
 
-		});
+		};
 	}
 
 	public void startVNC() {
 		// the only reason to do so is that system.exit shuts down
 		// FF and Safari on the Mac.
-		VncViewer.inAnApplet = true;
-		VncViewer.applet = this;
-		vncViewer = new VncViewer(null);
+		vncViewer = new VncViewer(this, newEventSubscriber());
 
 		toFront();
 	}

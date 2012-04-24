@@ -26,8 +26,9 @@ public class CanvasKeyListener implements KeyListener {
 	
 	private static final int[] MODIFIER_KEYCODES = new int[] {VK_ALT, VK_ALT_GRAPH, VK_CONTROL, VK_SHIFT, VK_META};
 	
-	private RfbProto rfb;
-	private VncCanvas canvas;
+	private final RfbProto rfb;
+	private final VncCanvas canvas;
+	private final VncViewer.Session session;
 	
 	private final AtomicBoolean firstKey = new AtomicBoolean(true);
 	
@@ -36,6 +37,7 @@ public class CanvasKeyListener implements KeyListener {
 	public CanvasKeyListener(VncCanvas canvas){
 		this.rfb = canvas.rfb;
 		this.canvas = canvas;
+		this.session = canvas.viewer.session;
 	}
 	
 	private void process(KeyEvent evt) {
@@ -56,14 +58,14 @@ public class CanvasKeyListener implements KeyListener {
 				// Input enabled.
 				synchronized (rfb) {
 					try {
-						if (firstKey.compareAndSet(true, false) && KeyboardEvent.extended_key_event) { // clean modifier keys state
+						if (firstKey.compareAndSet(true, false) && session.extended_key_event) { // clean modifier keys state
 							logger.info("First key event - sending modifier keys events to reset state");
 							for (KeyEntry key : KeyEntry.MODIFIER_KEYS) {
 								rfb.writeKeyboardEvent(key.keysym, key.keycode, true);
 								rfb.writeKeyboardEvent(key.keysym, key.keycode, false);
 							}
 						}
-						List<KeyboardEventMap.EvtEntry> remap = KeyboardEventMap.getInstance().remapEvent(evt);
+						List<KeyboardEventMap.EvtEntry> remap = session.kbEvtMap.remapEvent(evt);
 						if (remap != null) {
 							for (KeyboardEventMap.EvtEntry mappedEvt : remap) {
 								rfb.writeKeyboardEvent(

@@ -44,7 +44,7 @@ import javax.swing.JLabel;
 
 public class OptionsFrame extends JFrame implements WindowListener, ActionListener, ItemListener {
 
-  private static VncLogger logger = VncLogger.getLogger(VncViewer.class);
+  private static VncLogger logger = VncLogger.getLogger(OptionsFrame.class);
 	
   static String[] names = {
     "Encoding",
