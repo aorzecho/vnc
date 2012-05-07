@@ -4,7 +4,8 @@ public enum VncEvent {
 	INIT("init"),
 	CONNECTION_ERROR("connection_error"),
 	DESTROY("destroy"),
-	UPD_SETUP("upd_setup");
+	UPD_SETUP("upd_setup"),
+	FATAL_ERROR("fatal_error");
 
 	private String name;
 

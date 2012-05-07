@@ -1,10 +1,15 @@
 package com.tigervnc;
 
-public interface IVncEventSubscriber {
-
-	public void init(String s);
+interface IVncEventSubscriber {
 	
-	public void connectionError(String s, Exception e);
+	void init(String s);
 	
-	public void destroy(String s);
+	void connectionError(String s, Exception e);
+	
+	void destroy(String s);
+	
+	void updSetup(String s);
+	
+	void fatalError(String s, Exception e);
+	
 }

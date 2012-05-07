@@ -1007,20 +1007,26 @@ public class VncViewer implements java.lang.Runnable,
 
 	synchronized public void fatalError(String str) {
 		logger.error(str);
-		close();
+		if (inAnApplet) {
+			eventPublisher.publish(VncEvent.FATAL_ERROR, str);
+		} else {
+			close();
+		}
 	}
 
 	synchronized public void fatalError(String str, Exception e) {
-		logger.error(str);
+		logger.error(str, e);
 		
 		if (rfb != null && rfb.closed()) {
 			// Not necessary to show error message if the error was caused
 			// by I/O problems after the rfb.close() method call.
 			logger.info("RFB thread finished");
-		}
-		else{
-			e.printStackTrace();
-			close();
+		} else {
+			if (inAnApplet) {
+				eventPublisher.publish(VncEvent.FATAL_ERROR, str, e);
+			} else {
+				close();
+			}
 		}
 
 	}

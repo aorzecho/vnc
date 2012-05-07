@@ -112,15 +112,13 @@ public class VncApplet extends JApplet {
 			}
 
 			@Override
+			public void fatalError(String msg, Exception e){
+				publishEvent(VncEvent.FATAL_ERROR, id, msg, e);
+			}
+
+			@Override
 			public void updSetup(String msg) {
 				publishEvent(VncEvent.UPD_SETUP, id, msg);
-			}
-			
-			@Override
-			public void destroy(String msg){
-				// do not call js when applet is beeing destroyed
-//				publishEvent(VncEvent.DESTROY, id, msg);
-				
 			}
 
 		};

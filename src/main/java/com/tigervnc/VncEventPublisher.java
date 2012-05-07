@@ -29,6 +29,9 @@ public class VncEventPublisher {
 		case CONNECTION_ERROR:
 			for(VncEventSubscriber s : subscribers){s.connectionError(txt, ex);}
 			break;
+		case FATAL_ERROR:
+			for(VncEventSubscriber s : subscribers){s.fatalError(txt, ex);}
+			break;
 		case DESTROY:
 			for(VncEventSubscriber s : subscribers){s.destroy(txt);}
 			break;			
