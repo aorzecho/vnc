@@ -21,10 +21,11 @@ public class Version extends ClientMessage {
 	public Version(DataInputStream is) throws IOException{
 		super(is);
 		
-		Matcher matcher = version_pattern.matcher(new String(msg));
+		String versionMsg = new String(msg);
+		Matcher matcher = version_pattern.matcher(versionMsg);
 		if(!matcher.matches()){
 			// FIXME: change to a protocol exception...
-			throw new IOException("version from server: " + msg + " is not valid");
+			throw new IOException("version from server: " + versionMsg + " is not valid");
 		}
 		this.major = Integer.parseInt(matcher.group(1).replaceFirst("0*", ""));
 		this.minor = Integer.parseInt(matcher.group(2).replaceFirst("0*", ""));
