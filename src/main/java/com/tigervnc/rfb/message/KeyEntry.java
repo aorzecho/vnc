@@ -17,10 +17,10 @@ import com.tigervnc.log.VncLogger;
 public final class KeyEntry {
 
 	public static VncLogger logger = VncLogger.getLogger(KeyEntry.class);
-	public static final KeyEntry ALT = new KeyEntry(KeyEvent.VK_ALT, KeyEvent.CHAR_UNDEFINED, KeyEvent.ALT_DOWN_MASK);
-	public static final KeyEntry ALT_GR = new KeyEntry(KeyEvent.VK_ALT_GRAPH, KeyEvent.CHAR_UNDEFINED, KeyEvent.ALT_GRAPH_DOWN_MASK);
-	public static final KeyEntry CTRL = new KeyEntry(KeyEvent.VK_CONTROL, KeyEvent.CHAR_UNDEFINED, KeyEvent.CTRL_DOWN_MASK);
-	public static final KeyEntry SHIFT = new KeyEntry(KeyEvent.VK_SHIFT, KeyEvent.CHAR_UNDEFINED, KeyEvent.SHIFT_DOWN_MASK);
+	public static final KeyEntry ALT = new KeyEntry(KeyEvent.VK_ALT, 0xffe9, KeyEvent.ALT_DOWN_MASK);
+	public static final KeyEntry ALT_GR = new KeyEntry(KeyEvent.VK_ALT_GRAPH, 0xff7e, KeyEvent.ALT_GRAPH_DOWN_MASK);
+	public static final KeyEntry CTRL = new KeyEntry(KeyEvent.VK_CONTROL, 0xffe3, KeyEvent.CTRL_DOWN_MASK);
+	public static final KeyEntry SHIFT = new KeyEntry(KeyEvent.VK_SHIFT, 0xffe1, KeyEvent.SHIFT_DOWN_MASK);
 	public static final KeyEntry META = new KeyEntry(KeyEvent.VK_META, KeyEvent.CHAR_UNDEFINED, KeyEvent.META_DOWN_MASK);
 	public static final KeyEntry[] MODIFIER_KEYS = new KeyEntry[] {ALT, ALT_GR, CTRL, SHIFT};
 	
@@ -66,7 +66,9 @@ public final class KeyEntry {
 		int _keysym = KeyEvent.CHAR_UNDEFINED;
 		if (keyname.length == 2) {
 			try {
-				_keysym = Integer.valueOf(keyname[1]);
+				_keysym = keyname[1].startsWith("0x")
+						? Integer.valueOf(keyname[1].substring(2), 16)
+						: Integer.valueOf(keyname[1]);
 			} catch (Exception ex) {
 				logger.error("Unable to find keycode for " + keyname, ex);
 			}

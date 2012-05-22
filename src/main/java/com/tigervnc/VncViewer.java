@@ -332,24 +332,17 @@ public class VncViewer implements java.lang.Runnable,
 				sendKey(key);
 	}
 	
-	public void sendKey(KeyEntry key) {
-		if (rfb != null && !rfb.closed()) {
-			try {
-				if (session.extended_key_event) {
-					for (KeyboardEventMap.EvtEntry evt : key.getExtendedWriteEvents()) {
-						rfb.writeKeyboardEvent(evt.key.keysym, evt.key.keycode, evt.evtId == KeyEvent.KEY_PRESSED);
-					}
-				} else {
-					int mask = key.getModifierMask();
-					rfb.writeKeyboardEvent(new KeyEvent(vncContainer, KeyEvent.KEY_PRESSED, 0,
-							mask, key.keycode, (char) key.keysym));
-					rfb.writeKeyboardEvent(new KeyEvent(vncContainer, KeyEvent.KEY_RELEASED, 0,
-							mask, key.keycode, (char) key.keysym));
-				}
+	public void sendKey(KeyEntry keyReq) {
+		if (rfb != null && !rfb.closed()) try {
 
-			} catch (Exception ex) {
-				logger.error("Exception sending " + key, ex);
+			KeyEntry key = session.kbEvtMap.remapCodes(new KeyEvent(vncContainer, KeyEvent.KEY_PRESSED, 0,
+							keyReq.getModifierMask(), keyReq.keycode, (char) keyReq.keysym));
+			for (KeyboardEventMap.EvtEntry evt : key.getExtendedWriteEvents()) {
+				rfb.writeKeyboardEvent(evt.key.keysym, evt.key.keycode, evt.evtId == KeyEvent.KEY_PRESSED);
 			}
+
+		} catch (Exception ex) {
+			logger.error("Exception sending " + keyReq, ex);
 		}
 	}
 

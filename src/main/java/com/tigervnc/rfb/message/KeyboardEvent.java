@@ -57,13 +57,6 @@ public class KeyboardEvent implements IServerMessage {
                 
 		handleShortcuts(evt);
 		handlePecularaties(evt);
-		
-		// only important if not using extended key events
-		// the kvm vnc client ignores the keysym.
-		// wonder why the keysym is required in that case.
-		if(session.extended_key_event){
-			handleUndefinedJavaKeysymsConvert2x11(_keycode);
-		}
 	}
 
 	public KeyboardEvent(VncViewer.Session session, int keysym, int keycode, boolean down) {
@@ -72,15 +65,10 @@ public class KeyboardEvent implements IServerMessage {
 		this._keysym = keysym;
 		this._keycode = keycode;
 		this._press = down;
-		if(session.extended_key_event){
-			handleUndefinedJavaKeysymsConvert2x11(keycode);
-		}
 	}
 
 	/**
 	 * Handles shortcuts in the client.
-	 * 
-	 * Ctrl-Alt-Delete = Ctrl-Alt-BackSpace
 	 * 
 	 * @param evt
 	 * @return whether a shortcut was applied.
@@ -128,29 +116,6 @@ public class KeyboardEvent implements IServerMessage {
 				session._alt_gr_pressed = false;
 			}
 		}
-		switch (_keycode) {
-		case KeyEvent.VK_BACK_SPACE:
-			if (!(evt.isAltDown() && evt.isControlDown())) {
-				return;
-			}
-			addExtraEvent(X11_CONTROL, KeyEvent.VK_CONTROL, _press);
-			addExtraEvent(X11_ALT, KeyEvent.VK_ALT, _press);
-			addExtraEvent(X11_DELETE, KeyEvent.VK_DELETE, _press);
-			break;
-		case KeyEvent.VK_META: 		
-			// No Win key on Mac use META (cmd)
-			_keycode = KeyEvent.VK_WINDOWS;
-			break;
-		case KeyEvent.VK_DELETE:
-			// re-enable ctrl-alt-delete
-			if (!(evt.isAltDown() && evt.isControlDown())) {
-				return;
-			}
-			addExtraEvent(X11_CONTROL, KeyEvent.VK_CONTROL, _press);
-			addExtraEvent(X11_ALT, KeyEvent.VK_ALT, _press);
-			addExtraEvent(X11_DELETE, KeyEvent.VK_DELETE, _press);
-			break;
-		}
 	}
 
 	private void addExtraEvent(int _keysym, int _keycode, boolean _press) {
@@ -163,41 +128,6 @@ public class KeyboardEvent implements IServerMessage {
 	
 	public byte[] getBytes() {
 		return getKeyEvent();
-	}
-
-	final protected void handleUndefinedJavaKeysymsConvert2x11(int keycode) {
-		switch (keycode) {
-		case KeyEvent.VK_BACK_SPACE:
-			_keysym = X11_BACK_SPACE;
-			break;
-		case KeyEvent.VK_TAB:
-			_keysym = X11_TAB;
-			break;
-		case KeyEvent.VK_ENTER:
-			_keysym = X11_ENTER;
-			break;
-		case KeyEvent.VK_ESCAPE:
-			_keysym = X11_ESCAPE;
-			break;
-		case KeyEvent.VK_ALT:
-			_keysym = X11_ALT;
-			break;
-		case KeyEvent.VK_ALT_GRAPH:
-			_keysym = X11_ALT_GRAPH;
-			break;
-		case KeyEvent.VK_CONTROL:
-			_keysym = X11_CONTROL;
-			break;
-		case KeyEvent.VK_SHIFT:
-			_keysym = X11_SHIFT;
-			break;
-		case X11_WINDOWS:
-			// WTF? Java is not giving us the X11_WINDOWS value when pressing
-			// the windows key.
-			// TODO: is this only on Linux?
-			_keycode = KeyEvent.VK_WINDOWS;
-			break;
-		}
 	}
 
 	protected byte[] getKeyEvent() {

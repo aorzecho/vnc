@@ -108,7 +108,8 @@ public class CanvasKeyListener implements KeyListener {
 	
 	private void updateMod (int keycode, boolean down) throws Exception {
 		if (down ^ pressed.contains(keycode)) {
-			rfb.writeKeyboardEvent((int) KeyEvent.CHAR_UNDEFINED, keycode, down);
+			rfb.writeKeyboardEvent(new KeyEvent(canvas, down ? KeyEvent.KEY_PRESSED : KeyEvent.KEY_RELEASED, 0,
+							0, keycode, KeyEvent.CHAR_UNDEFINED));
 			if (down)
 				pressed.add(keycode);
 			else
