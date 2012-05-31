@@ -149,12 +149,14 @@ public class KeyboardEventMap {
 	}
 
 	public List<EvtEntry> remapEvent(KeyEvent evt) {
-		EvtEntry[] searchKeys = new EvtEntry[] {// try exact match first (keycode+char+modifiers), keycode only at last
-			new EvtEntry(evt),
-			new EvtEntry(evt.getID(), new KeyEntry(evt.getKeyCode(), KeyEvent.CHAR_UNDEFINED, evt.getModifiersEx())),
-			new EvtEntry(evt.getID(), new KeyEntry(evt.getKeyCode(), evt.getKeyChar(), 0)),
-			new EvtEntry(evt.getID(), new KeyEntry(evt.getKeyCode(), KeyEvent.CHAR_UNDEFINED, 0))
-		};
+		List<EvtEntry> searchKeys = new ArrayList<EvtEntry>(); // try exact match first (keycode+char+modifiers), keycode only at last
+		searchKeys.add(new EvtEntry(evt));
+		if (nonNull(evt.getKeyCode(), CHAR_UNDEFINED, evt.getModifiersEx()))
+			searchKeys.add(new EvtEntry(evt.getID(), new KeyEntry(evt.getKeyCode(), CHAR_UNDEFINED, evt.getModifiersEx())));
+		if (nonNull(evt.getKeyCode(), evt.getKeyChar(), 0))
+			searchKeys.add(new EvtEntry(evt.getID(), new KeyEntry(evt.getKeyCode(), evt.getKeyChar(), 0)));
+		if (nonNull(evt.getKeyCode(), CHAR_UNDEFINED, 0))
+			searchKeys.add(new EvtEntry(evt.getID(), new KeyEntry(evt.getKeyCode(), CHAR_UNDEFINED, 0)));
 		
 		for (EvtEntry entry : searchKeys) {
 			for (KbFix fix : fixes) {
@@ -169,12 +171,14 @@ public class KeyboardEventMap {
 	}
 
 	public KeyEntry remapCodes(KeyEvent evt) {
-		KeyEntry[] searchKeys = new KeyEntry[] {// try exact match first (keycode+char+modifiers), keycode only at last
-			new KeyEntry(evt),
-			new KeyEntry(evt.getKeyCode(), KeyEvent.CHAR_UNDEFINED, evt.getModifiersEx()),
-			new KeyEntry(evt.getKeyCode(), evt.getKeyChar(), 0),
-			new KeyEntry(evt.getKeyCode(), KeyEvent.CHAR_UNDEFINED, 0)
-		};
+		List <KeyEntry> searchKeys = new ArrayList<KeyEntry>();// try exact match first (keycode+char+modifiers), keycode only at last
+		searchKeys.add(new KeyEntry(evt));
+		if (nonNull(evt.getKeyCode(), CHAR_UNDEFINED, evt.getModifiersEx()))
+			searchKeys.add(new KeyEntry(evt.getKeyCode(), CHAR_UNDEFINED, evt.getModifiersEx()));
+		if (nonNull(evt.getKeyCode(), evt.getKeyChar(), 0))
+			searchKeys.add(new KeyEntry(evt.getKeyCode(), evt.getKeyChar(), 0));
+		if (nonNull(evt.getKeyCode(), CHAR_UNDEFINED, 0))
+			searchKeys.add(new KeyEntry(evt.getKeyCode(), CHAR_UNDEFINED, 0));
 
 		for (KeyEntry key : searchKeys) {
 			for (KbFix fix : fixes) {
@@ -189,7 +193,7 @@ public class KeyboardEventMap {
 				}
 			}
 		}
-		return searchKeys[0];
+		return searchKeys.get(0);
 	}
 
 //============  enable/disable fixes =========================    
@@ -430,6 +434,13 @@ public class KeyboardEventMap {
 		return setup;
 	}
 
+	private boolean nonNull(int keyCode, int keySym, int mods) {
+		return
+				keyCode != VK_UNDEFINED
+				|| keySym != CHAR_UNDEFINED
+				|| mods !=0;
+	}
+	
 // ==== initialisation ====
 	static {
 		if (Util.isLinux()) {
