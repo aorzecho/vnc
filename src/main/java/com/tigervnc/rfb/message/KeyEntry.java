@@ -1,6 +1,5 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (c) 2012 ProfitBricks GmbH. All Rights Reserved.
  */
 package com.tigervnc.rfb.message;
 
