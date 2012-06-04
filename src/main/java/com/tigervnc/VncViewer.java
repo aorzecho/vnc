@@ -195,7 +195,7 @@ public class VncViewer implements java.lang.Runnable,
 			options.setVisible(true);
 		}
 
-		ToolTipManager.sharedInstance().setDismissDelay(30000);
+		ToolTipManager.sharedInstance().setDismissDelay(25000);
 		
 		connect();
 	}
