@@ -1,4 +1,4 @@
 Manifest-Version: 1.0
 Main-Class: com.tigervnc.VncViewer
-Class-Path: lib/log4j-java1.1.jar
+Class-Path: .
   

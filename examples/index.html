@@ -40,6 +40,28 @@ form {
 
     <div id="applets"></div>
 
+<script>                                                                                                                
+    function saveSetup (setup) {                                                                                        
+        document.cookie = "tigervnc="+setup+"; expires=15/04/2099 00:00:00";                                               
+    }                                                                                                                   
+    function get_cookie ( cookie_name ) {                                                                               
+      var results = document.cookie.match ( '(^|;) ?' + cookie_name + '=([^;]*)(;|$)' );                                
+      if ( results )                                                                                                    
+        return ( unescape ( results[2] ) );                                                                             
+      else                                                                                                              
+        return null;                                                                                                    
+    }                                                                                                                   
+    function cb (evName, id, val) {if (evName=='upd_setup') saveSetup(val)}                                             
+    function setViewportSize(/*int*/ x, /*int*/ y) {                                                                    
+                                                                                                                        
+alert("setVP");
+        dY = window.outerHeight - window.innerHeight;                                                                   
+        dX = window.outerWidth  - window.innerWidth;                                                                    
+                                                                                                                        
+        window.resizeTo(x+dX, y+dY);                                                                                    
+                                                                                                                        
+    }                                                                                                                   
+</script>
   <script>
 dojo.require('vnc.Viewer');
 

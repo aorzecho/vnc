@@ -40,7 +40,7 @@ dojo.declare('vnc.Viewer', null, {
     
         args.archive = this.archive;
         args.code = 'com.tigervnc.VncApplet';
-        args.new_window = "Yes";
+        args.new_window = "yes";
         args.show_controls = 'no';
         args.callback = 'vnc.Viewer.javatrigger';
 

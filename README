@@ -82,3 +82,15 @@ In that case:
 
 The client OS might intercept Ctrl + Alt + Delete. Instead type Ctrl +
 Alt + Backspace.
+
+key code/event mappings for local keyboard layouts
+-------------------------------------------------
+
+In brief: 
+A vm, running inside qemu/kvm, has access to a standard IBM PC (US layout) emulated keyboard. Local keyboard layouts can be emulated by setting desired layout in guest OS (which does the mapping from standard US-layout).
+
+Now, depending on what physical keyboard is used on the client side:
+* us/us-international - keycodes can be mapped directly to the emulated keyboard. Us-international layout supports AltGr, so it should work just fine with most local layouts mapped in the guest OS.
+* local-layout - key codes do not match IBM PC/US-layout keyboard emulated by kvm and have to be mapped to US-layout first (and yes - then mapped back by the guest OS...)
+
+The vnc client contains mappings for several popular keyboard layouts. Please note that these mappings are only useful when physical keyboard with given layout is attached (ie. not when the layout is only emulated in higher layers).

@@ -574,12 +574,12 @@ public class VncViewer implements java.lang.Runnable,
 		gbc.ipadx = 100;
 		gbc.ipady = 50;
 
-		vncContainer.add(authPanel);
+		canvasPanel.add(authPanel);
 		pack();
 		
 		authPanel.moveFocusToDefaultField();
 		String pw = authPanel.getPassword();
-		vncContainer.remove(authPanel);
+		canvasPanel.remove(authPanel);
 
 		return pw;
 	}
@@ -602,13 +602,13 @@ public class VncViewer implements java.lang.Runnable,
 		showConnectionStatus(null);
 
 		AuthPanel authPanel = new AuthPanel(this, false);
-		vncContainer.add(authPanel);
+		canvasPanel.add(authPanel);
 		
 		pack();
 
 		authPanel.moveFocusToDefaultField();
 		String pw = authPanel.getPassword();
-		vncContainer.remove(authPanel);
+		canvasPanel.remove(authPanel);
 
 		return pw;
 	}

@@ -1,0 +1,70 @@
+<html>
+<!--
+    Simple page for testing the vnc applet, embedded.
+-->
+<head>
+<style>
+    * {
+        padding: 0px;
+        margin: 0px;
+    }
+</style>
+
+<div id="info" style="color:gray">
+    viewport: <span id="viewport"></span> <br/>
+    setup: <span id="setup"></span> <br/>
+    last callback: <span id="callback"></span>
+</div>
+<script>
+    function saveSetup (setup) {
+        document.getElementById('setup').innerHTML = setup;
+        document.cookie = "pbvnc="+setup+"; expires=15/04/2099 00:00:00";
+    }
+    function get_cookie ( cookie_name ) {
+      var results = document.cookie.match ( '(^|;) ?' + cookie_name + '=([^;]*)(;|$)' );
+      if ( results )
+        return ( unescape ( results[2] ) );
+      else
+        return null;
+    }
+    function cb (evName, id, val) {
+        document.getElementById('callback').innerHTML = evName + ", id=" + id + ", val=" + val;
+        if (evName=='upd_setup') saveSetup(val)
+    }
+    function setViewportSize(/*int*/ x, /*int*/ y) {
+        
+        dY = window.outerHeight - window.innerHeight;
+        dX = window.outerWidth  - window.innerWidth;
+        
+        document.getElementById('viewport').innerHTML =  x + "x" + y + " dX=" + dX + ", dY=" + dY;
+
+        window.resizeTo(x+dX, y+dY);
+
+    }
+</script>
+<script src="http://www.java.com/js/deployJava.js" type="text/javascript"></script>
+<script>
+    var attributes = {  codebase:'http://localhost/vnc/js/vnc/resources',
+                        code:'com.tigervnc.VncApplet.class',
+                        log_level:'D',
+                        archive:'vnc.jar',
+                        new_window:'no',
+                        //show_controls:'no',
+                        width:'100%', height:'100%' 
+    } ;
+    var parameters = {  HOST:'localhost',
+                        PORT:5901,
+                        PASSWORD:'abc123',
+                        id:'vnc-applet',
+                        callback:'cb',
+                        keyboard_setup:get_cookie('pbvnc'),
+                        new_window:'no',
+                        MAYSCRIPT:true
+    } ;
+    var version = '1.6' ;
+    deployJava.runApplet(attributes, parameters, version);
+</script>
+</head>    
+<body>
+</body>
+</html>

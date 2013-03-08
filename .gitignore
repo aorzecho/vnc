@@ -1,8 +1,11 @@
 bin
+target
 .classpath
 .settings
 **.svn**
 *.class
+*.swp
 examples/vnc.jar
 examples/lib/**
 src/com/tigervnc/rfb/message/KeyboardEventMap.java
+nbactions.xml
