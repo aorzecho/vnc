@@ -1,5 +1,5 @@
 OUTPUT = bin
-SOURCES = $(shell find src -type f -name \*.java)
+SOURCES = $(shell find src/main -type f -name \*.java)
 LIBS = lib/log4j-java1.1.jar:lib/plugin.jar
 FLAGS = -target 1.5 -classpath $(LIBS) -d $(OUTPUT)
 KEYSTORE_ALIAS = "dev"
@@ -11,7 +11,7 @@ clean:
 	@(rm -rf $(OUTPUT);	mkdir $(OUTPUT))
 
 keymap:
-	@(cd src/com/tigervnc/;./keymap-gen.py)
+	@(cd src/main/java/com/tigervnc/;./keymap-gen.py)
 
 build: keymap
 	@(javac $(FLAGS) $(SOURCES))
